@@ -1,8 +1,12 @@
 package org.example.backend.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "route_points")
 public class RoutePoint {
     @Id
