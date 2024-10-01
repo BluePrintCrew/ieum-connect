@@ -2,12 +2,11 @@ package org.example.backend.dto;
 
 
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
-public class StoryDto {
+public class ResponseStoryDto {
 
     @Data
     public static class CreateStoryRequest {

@@ -38,6 +38,10 @@ public class StoryService {
 
     }
 
+    @Transactional
+    public List<Story> getStoryByUserId(Long memberId) {
+            return storyRepository.findByUserUserId(memberId);
+    }
     // 선호도 추가는 추후에 진행
     @Transactional
     public Story createStory(User user, String title, String memo, int preference, List<String> hashtags, List<MultipartFile> images) throws IOException {
