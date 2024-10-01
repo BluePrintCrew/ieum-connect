@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import KakaoMap from '../Kakao/KakaoMap'; // KakaoMap 컴포넌트 불러오기
 import { extractExifData } from '../function/exif'; // EXIF 데이터 추출 함수 불러오기
+import { getAddressFromCoords } from '../function/kakaoGeocoder'; // 좌표로 주소를 변환하는 함수
 
 const StoryRecord = () => {
   const [title, setTitle] = useState('');
@@ -12,6 +13,7 @@ const StoryRecord = () => {
   const [hashtags, setHashtags] = useState([]);
   const [isSpotAdding, setIsSpotAdding] = useState(false); // 마커 추가 활성화 여부
   const [markers, setMarkers] = useState([]); // 지도에 추가된 마커 저장
+  const [addresses, setAddresses] = useState([]); // 주소 정보 저장
 
   // 파일 선택 처리 (JPEG 파일만 허용)
   const handleFileChange = (e) => {
@@ -23,15 +25,24 @@ const StoryRecord = () => {
       const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
       setImagePreviews([...imagePreviews, ...newPreviews]);
 
+      // EXIF 데이터에서 GPS 정보 추출 및 마커 추가
       validFiles.forEach((file) => {
         // EXIF 데이터 추출
         extractExifData(file, (data) => {
-          const { latitude, longitude, dateTime } = data;
-          
-          // 새로운 마커 추가
-          const newMarker = { lat: latitude, lng: longitude, date: dateTime };
-          setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
-          console.log('추가된 마커:', newMarker);
+          if (data && data.latitude && data.longitude) {
+            const { latitude, longitude, dateTime } = data;
+
+            // 좌표로 주소 검색 후 마커 추가
+            getAddressFromCoords(latitude, longitude, (address) => {
+              const newMarker = { lat: latitude, lng: longitude, date: dateTime, address };
+              setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+              setAddresses((prevAddresses) => [...prevAddresses, address]);
+
+              console.log('추가된 마커:', newMarker);
+            });
+          } else {
+            console.log('GPS 정보가 없는 사진입니다.');
+          }
         });
       });
     }
@@ -80,6 +91,7 @@ const StoryRecord = () => {
     console.log('만족도:', preference);
     console.log('해시태그:', hashtags);
     console.log('저장된 마커들:', markers);
+    console.log('추가된 주소들:', addresses);
     // 여기에 제출 로직 추가
   };
 
@@ -96,7 +108,7 @@ const StoryRecord = () => {
         style={{ width: '100%', padding: '10px', marginBottom: '20px' }}
       />
 
-      {/* 카카오 지도 추가 (Spot 추가 여부를 전달) */}
+      {/* 카카오 지도 추가 (Spot 추가 여부 및 마커 전달) */}
       <div
         style={{
           border: isSpotAdding ? '3px solid blue' : '1px solid gray', // Spot 추가 모드에 따라 테두리 변경
@@ -108,7 +120,7 @@ const StoryRecord = () => {
 
       {/* Spot 추가 모드 알림 */}
       {isSpotAdding && (
-        <div style={{ color: 'blue', marginTop: '10px' }}>
+        <div style={{ color: 'pink', marginTop: '10px' }}>
           Spot 추가 모드가 활성화되었습니다. 지도를 클릭하여 Spot을 추가하세요.
         </div>
       )}
@@ -204,20 +216,34 @@ const StoryRecord = () => {
               <button
                 onClick={() => removeHashtag(index)}
                 style={{ marginLeft: '10px', cursor: 'pointer', background: 'none', border: 'none', color: 'red' }}
-              >
-                X
-              </button>
-            </div>
-          ))}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
+  
+        {/* 완료 버튼 */}
+        <button 
+          onClick={handleSubmit} 
+          style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'green', color: 'white' }}
+        >
+          완료
+        </button>
+  
+        {/* 추가된 마커 정보 */}
+        <h3>저장된 Spot 정보:</h3>
+        <ul>
+          {markers.map((marker, index) => (
+            <li key={index}>
+              <strong>위도:</strong> {marker.lat}, <strong>경도:</strong> {marker.lng}, <strong>주소:</strong> {marker.address}, <strong>시간:</strong> {marker.date}
+            </li>
+          ))}
+        </ul>
       </div>
-
-      {/* 완료 버튼 */}
-      <button onClick={handleSubmit} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'green', color: 'white' }}>
-        완료
-      </button>
-    </div>
-  );
-};
-
-export default StoryRecord;
+    );
+  };
+  
+  export default StoryRecord;
+   

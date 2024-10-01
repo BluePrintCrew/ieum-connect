@@ -32,7 +32,7 @@ const KakaoMap = ({ isSpotAdding }) => {
       const mapContainer = document.getElementById('map'); // 지도를 표시할 div
       const mapOption = {
         center: new window.kakao.maps.LatLng(currentCenter.lat, currentCenter.lng), // 현재 중심 좌표 사용
-        level: 2, // 확대 레벨
+        level: 3, // 확대 레벨
       };
 
       // 지도 생성
@@ -75,8 +75,10 @@ const KakaoMap = ({ isSpotAdding }) => {
 
         // 마커 삭제 이벤트 리스너 (클릭 시 삭제)
         window.kakao.maps.event.addListener(newMarker, 'click', function () {
-          newMarker.setMap(null); // 마커를 지도에서 삭제
+          if (isSpotAdding) {
+            newMarker.setMap(null); // 마커를 지도에서 삭제
           setMarkers((prevMarkers) => prevMarkers.filter(marker => marker !== newMarker)); // 상태에서도 제거
+          }
         });
       };
 

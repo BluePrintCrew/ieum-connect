@@ -3,11 +3,12 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import StoryRecord from './components/StoryRecord';
 import LoginPage from './LoginPage';
 import KakaoCallback from './KakaoCallback';
-
+import Home from './components/Home.js';
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/home" element={<Home/>}      />
         <Route path="/login" element={<LoginPage/>} /> 
         <Route path="/record" element={<StoryRecord />} />
         <Route path="/oauth/kakao/callback" element={<KakaoCallback/>} /> {/*redirect */}
