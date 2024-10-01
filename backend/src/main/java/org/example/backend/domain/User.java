@@ -23,6 +23,9 @@ public class User {
     private String kakaoId;
 
 
+    @Column(nullable = false, name = "user_name")
+    private String username;
+
     private String nickname;
 
     // 이미지 url

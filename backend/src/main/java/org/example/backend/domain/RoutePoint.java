@@ -12,7 +12,7 @@ public class RoutePoint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "point_id")
-    private Long pointId;
+    private Long routePointId;
 
     // spot과 route는 다대일 관계
     @ManyToOne(fetch = FetchType.LAZY)

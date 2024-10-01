@@ -1,9 +1,8 @@
 package org.example.backend.controller;
 
-import org.example.backend.controller.StoryController;
 import org.example.backend.domain.Story;
 import org.example.backend.domain.User;
-import org.example.backend.dto.StoryDto;
+import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.service.StoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ class StoryControllerTest {
     @Test
     void createStory_Success() throws IOException {
 
-        StoryDto.CreateStoryRequest request = new StoryDto.CreateStoryRequest();
+        ResponseStoryDto.CreateStoryRequest request = new ResponseStoryDto.CreateStoryRequest();
         request.setTitle("테스트 스토리 제목");
         request.setMemo("태스트 메모");
         request.setPreference(5);
@@ -62,9 +61,9 @@ class StoryControllerTest {
         // Assert
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody() instanceof StoryDto.CreateStoryResponse);
+        assertTrue(response.getBody() instanceof ResponseStoryDto.CreateStoryResponse);
 
-        StoryDto.CreateStoryResponse responseBody = (StoryDto.CreateStoryResponse) response.getBody();
+        ResponseStoryDto.CreateStoryResponse responseBody = (ResponseStoryDto.CreateStoryResponse) response.getBody();
         assertEquals("success", responseBody.getStatus());
         assertEquals("스토리가 성공적으로 저장되었습니다.", responseBody.getMessage());
         assertEquals(1L, responseBody.getSavedStoryId());
@@ -76,7 +75,7 @@ class StoryControllerTest {
     @Test
     void createStory_Failure() throws IOException {
         // Arrange
-        StoryDto.CreateStoryRequest request = new StoryDto.CreateStoryRequest();
+        ResponseStoryDto.CreateStoryRequest request = new ResponseStoryDto.CreateStoryRequest();
         request.setTitle("Test Story");
         request.setMemo("Test Memo");
         request.setPreference(5);
@@ -95,9 +94,9 @@ class StoryControllerTest {
         // Assert
         assertTrue(response.getStatusCode().is4xxClientError());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody() instanceof StoryDto.ErrorResponse);
+        assertTrue(response.getBody() instanceof ResponseStoryDto.ErrorResponse);
 
-        StoryDto.ErrorResponse errorResponse = (StoryDto.ErrorResponse) response.getBody();
+        ResponseStoryDto.ErrorResponse errorResponse = (ResponseStoryDto.ErrorResponse) response.getBody();
         assertEquals("error", errorResponse.getStatus());
         assertEquals("스토리 저장 중 오류가 발생했습니다: Test exception", errorResponse.getMessage());
 

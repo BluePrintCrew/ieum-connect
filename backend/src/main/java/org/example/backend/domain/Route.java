@@ -40,4 +40,6 @@ public class Route {
 
     // Getters and setters
     // ...
+
+    // routepoint에 사진을 넣어야할지를 생ㄱ
 }
