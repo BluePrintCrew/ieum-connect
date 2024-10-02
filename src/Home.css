@@ -35,11 +35,11 @@
   }
   
   .search-bar input {
-    width: 100%;
+    width: 94%;
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 5px; 
   }
   
   /* 광고 영역 */

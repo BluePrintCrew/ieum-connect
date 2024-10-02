@@ -140,7 +140,8 @@ const StoryRecord = () => {
 
       {/* 사진 미리보기 및 등록 */}
       <div>
-        <h3>사진 등록</h3>
+       <h3> </h3> 
+      
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
           {imagePreviews.map((preview, index) => (
             <img
