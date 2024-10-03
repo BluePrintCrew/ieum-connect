@@ -19,7 +19,7 @@ public class Route {
 
     // 경로와 스토리는 일대일 대응
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "story_id", unique = true, nullable = false)
+    @JoinColumn(name = "story_id", unique = true)
     private Story story;
 
     private String name;
@@ -37,6 +37,10 @@ public class Route {
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
     private List<Hashtag> hashtags = new ArrayList<>();
+
+     public void addHashtag(Hashtag hashtag) {
+        hashtags.add(hashtag);
+    }
 
     // Getters and setters
     // ...

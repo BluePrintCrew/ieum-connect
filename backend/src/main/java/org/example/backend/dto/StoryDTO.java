@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -53,8 +54,8 @@ public class StoryDTO {
     @AllArgsConstructor
     public static class RoutePointDTO {
         private Long routePointId;
-        private Double latitude;
-        private Double longitude;
+        private BigDecimal latitude;
+        private BigDecimal longitude;
         private Integer orderNum;
     }
 
@@ -66,7 +67,7 @@ public class StoryDTO {
         private Long photoId;
         private String filePath;
         private LocalDateTime takenAt;
-        private Double latitude;
-        private Double longitude;
+        private BigDecimal latitude;
+        private BigDecimal longitude;
     }
 }

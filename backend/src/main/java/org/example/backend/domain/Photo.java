@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 // 사진 - spot 과 별개임 사진을 보관하는 table이 따로 존재해야한다.
@@ -33,11 +34,11 @@ public class Photo {
 
     // 위도
     @Column(nullable = false, precision = 10, scale = 8)
-    private Double latitude;
+    private BigDecimal latitude;
 
     // 경도
     @Column(nullable = false, precision = 11, scale = 8)
-    private Double longitude;
+    private BigDecimal longitude;
 
     // Getters and setters
     // ...

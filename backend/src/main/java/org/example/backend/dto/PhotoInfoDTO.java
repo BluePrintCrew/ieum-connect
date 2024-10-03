@@ -7,6 +7,7 @@ import org.example.backend.service.PhotoService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -20,9 +21,9 @@ public class PhotoInfoDTO {
     //ex "이현제.jpeg
     private String fileName;
     // 위도
-    private double latitude;
+    private BigDecimal latitude;
     // 경도
-    private double longitude;
+    private BigDecimal longitude;
     // 촬영시간
     private String takenAt;
     //사진 순서

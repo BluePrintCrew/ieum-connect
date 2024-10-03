@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -49,8 +50,8 @@ public class PhotoService {
                     TiffImageMetadata.GPSInfo gps = exif.getGPS();
                     if (gps != null) {
                         logger.info("GPS 데이터 발견");
-                        double latitude = gps.getLatitudeAsDegreesNorth();
-                        double longitude = gps.getLongitudeAsDegreesEast();
+                        BigDecimal latitude = BigDecimal.valueOf(gps.getLatitudeAsDegreesNorth());
+                        BigDecimal longitude = BigDecimal.valueOf(gps.getLongitudeAsDegreesEast());
                         String dateTime = Arrays.toString(exif.getFieldValue(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL));
 
                         logger.info("추출된 데이터 - Latitude: " + latitude + ", Longitude: " + longitude + ", DateTime: " + dateTime);
