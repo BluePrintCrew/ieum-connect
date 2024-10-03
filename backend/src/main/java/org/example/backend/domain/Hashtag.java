@@ -17,7 +17,7 @@ public class Hashtag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long hashtagId;
 
-    @Column(nullable = false, unique = true)
+    @Column( unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "hashtags")

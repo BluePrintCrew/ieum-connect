@@ -27,7 +27,8 @@ public class StoryController {
 
 
 
-        @GetMapping("/member/{memberId}")
+        // 해당 memberId의 모든 스토리를 가져온다. -> 마이페이지에서 받아 올 수 있다.
+        @GetMapping("/member/{userId}")
         public ResponseEntity<List<StoryDTO.Response>> getStoriesByUserId(@PathVariable("userId") Long userId) {
             try {
                 // 각 story에 대한 list를 받아옴
@@ -48,6 +49,18 @@ public class StoryController {
                 return ResponseEntity.badRequest().build();
             }
         }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<StoryDTO.Response>> searchStoriesByHashtag(@RequestParam("hashtag") String hashtagName) {
+        List<Story> stories = storyService.findStoriesByHashtag(hashtagName);
+        if (stories.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        List<StoryDTO.Response> storyDTOs = stories.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(storyDTOs);
+    }
 
         private StoryDTO.Response convertToDTO(Story story) {
             StoryDTO.Response dto = new StoryDTO.Response();
