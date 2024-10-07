@@ -23,12 +23,11 @@ import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/photos")
-@Tag(name = "사진의 관련 controller ")
+@Tag(name = "Photo upload ", description = "형이 이미 만든 기능이면 안써도 됨.")
 public class PhotoController {
 
     private final PhotoService photoService;
 
-    @Tag(name = "정보 추출 및 전달, 정렬")
     @PostMapping("/upload")
     public List<PhotoInfoDTO> uploadPhotos(@RequestParam("photos") List<MultipartFile> photos) throws IOException, ImageReadException {
         List<PhotoInfoDTO> photoInfoList = new ArrayList<>();

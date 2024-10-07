@@ -24,6 +24,7 @@ public class StoryDTO {
         private RouteDTO route;
         private List<PhotoDTO> photos;
         private List<String> hashtags;
+        private int photoCount;
 
         // 생성자, getter, setter 등은 lombok 어노테이션으로 대체
     }
