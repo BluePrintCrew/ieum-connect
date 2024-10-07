@@ -9,3 +9,19 @@ spring:
     hibernate:
       ddl-auto: create # application 첫 실행 시에만 create, 이후에는 none 혹은 주석처리
     show-sql: true
+
+springdoc:
+  version: '0.0.1'
+  api-docs:
+    path: /api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    operations-sorter: alpha
+    tags-sorter: alpha
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    display-query-params-without-oauth2: true
+    doc-expansion: none
+  paths-to-match:
+    - /api/**

@@ -3,6 +3,7 @@ package org.example.backend.service;
 import org.apache.commons.imaging.ImageReadException;
 import org.example.backend.domain.*;
 import org.example.backend.dto.PhotoInfoDTO;
+import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.repository.*;
 
 import org.springframework.stereotype.Service;
@@ -44,6 +45,12 @@ public class StoryService {
     }
 
     @Transactional
+    public Story getStoryById(Long id) {
+            return storyRepository.findByStoryId(id);
+    }
+
+
+    @Transactional
     public List<Story> findStoriesByHashtag(String hashtagName){
         return storyRepository.findByRouteHashtagsNameContainingIgnoreCase(hashtagName);
     }
@@ -74,6 +81,17 @@ public class StoryService {
         return story;
     }
 
+    @Transactional
+    public Story updateStory(Long storyId, ResponseStoryDto.UpdateStoryRequest request) {
+        Story byStoryId = storyRepository.findByStoryId(storyId);
+        byStoryId.setTitle(request.getTitle());
+        byStoryId.setDescription(request.getDescription());
+        byStoryId.setVisibility(request.getVisibility());
+
+        storyRepository.save(byStoryId);
+
+        return byStoryId; // default를 private로 일단 두는게 좋을 것 같다.
+    }
 
     private List<RoutePoint> createRoutePoints(List<MultipartFile> images, Route route) throws IOException {
         List<PhotoInfoDTO> photoInfoList = images.stream()
@@ -140,5 +158,10 @@ public class StoryService {
         // Implement file saving logic and return the file path
         // This is just a placeholder
         return "C:\\Users\\guswp\\Desktop\\ieum-connect-photo" + file.getOriginalFilename();
+    }
+
+    public void deleteStory(Long storyId) {
+        Story byStoryId = storyRepository.findByStoryId(storyId);
+        storyRepository.delete(byStoryId);
     }
 }
