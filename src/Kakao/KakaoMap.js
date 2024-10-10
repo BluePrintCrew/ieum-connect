@@ -75,10 +75,10 @@ const KakaoMap = ({ isSpotAdding }) => {
 
         // 마커 삭제 이벤트 리스너 (클릭 시 삭제)
         window.kakao.maps.event.addListener(newMarker, 'click', function () {
-          if (!isSpotAdding) {
+          if (isSpotAdding) {
             newMarker.setMap(null); // 마커를 지도에서 삭제
             setMarkers((prevMarkers) => prevMarkers.filter(marker => marker !== newMarker)); // 상태에서도 제거
-          } else {
+          } else if (!isSpotAdding) {
             console.log('Spot 추가 모드가 꺼져 있습니다. 마커를 삭제할 수 없습니다.');
           }
         });
