@@ -84,6 +84,7 @@ const StoryRecord = () => {
               {preference >= level ? '❤️' : '♡'}
             </span>
           ))}
+        
         </div>
         <p>선택된 만족도: {preference}단계</p>
       </div>
@@ -99,6 +100,9 @@ const StoryRecord = () => {
           ))}
         </div>
       </div>
+     {/*</div> <button onClick={console.log('API Key:', process.env.REACT_APP_KAKAO_REST_API_KEY);}테스트</button>*/}
+     <button onClick={() => console.log('API Key:', process.env.REACT_APP_KAKAO_REST_API_KEY)}>테스트</button>
+
       <button onClick={handleSubmit} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'green', color: 'white' }}>완료</button>
       <h3>저장된 Spot 정보:</h3>
       <ul>
