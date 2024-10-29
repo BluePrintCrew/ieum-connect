@@ -4,6 +4,7 @@ import StoryRecord from './components/StoryRecord';
 import LoginPage from './LoginPage';
 import KakaoCallback from './KakaoCallback';
 import Home from './components/Home.js';
+import SearchMemory from './components/SearchMemory.js'
 function App() {
   return (
     <Router>
@@ -11,6 +12,7 @@ function App() {
         <Route path="/home" element={<Home/>}      />
         <Route path="/login" element={<LoginPage/>} /> 
         <Route path="/record" element={<StoryRecord />} />
+        <Route path="/search" element={<SearchMemory />} />
         <Route path="/oauth/kakao/callback" element={<KakaoCallback/>} /> {/*redirect */}
         {/* 
         <Route path="/share" element={<MemoryShare />} />

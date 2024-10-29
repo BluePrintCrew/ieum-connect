@@ -1,0 +1,180 @@
+/* 기본 컨테이너 스타일 */
+.storyrecord-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f0f8ff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .storyrecord-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* 지도 및 이미지 미리보기 */
+  .map-container {
+    border: 1px solid gray;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .map-container.spot-adding {
+    border: 3px solid blue;
+    opacity: 0.8;
+  }
+  
+  .spot-adding-notice {
+    color: pink;
+    text-align: center;
+    margin-top: 10px;
+  }
+  
+  /* 파일 업로드 */
+  .image-preview-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .image-preview {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+  }
+  
+  .upload-label {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid gray;
+  }
+  
+  /* 해시태그 스타일 */
+  .hashtag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .hashtag {
+    background-color: #e0e0e0;
+    border-radius: 20px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .hashtag-remove {
+    margin-left: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: red;
+  }
+  
+  /* 입력 및 버튼 스타일 */
+  .title-input, .hashtag-input, .memo-textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .memo-textarea {
+    height: 100px;
+  }
+  
+  .toggle-spot-button, .submit-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .toggle-spot-button.active {
+    background-color: red;
+  }
+  
+  .toggle-spot-button {
+    background-color: blue;
+    margin-top: 10px;
+  }
+  
+  .submit-button {
+    background-color: green;
+    margin-top: 20px;
+  }
+  
+  /* 선호도 아이콘 */
+  .preference-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .preference-icon {
+    cursor: pointer;
+    font-size: 30px;
+    color: gray;
+    margin-left: 10px;
+  }
+  
+  .preference-icon.active {
+    color: red;
+  }
+  
+  /* 드래그 앤 드롭 스타일 */
+  .marker-list {
+    padding: 0;
+    list-style: none;
+  }
+  
+  .marker-item {
+    user-select: none;
+    padding: 8px;
+    margin: 4px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+  }
+  
+  /* 하단 네비게이션 */
+  .footer-nav {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #e0e0e0;
+    padding: 15px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 1200px;
+    background-color: #ffffff;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    box-shadow: 0px -1px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 15px 15px 0 0;
+  }
+  
+  .footer-nav button {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    background-color: #fafafa;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 0 10px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .footer-nav button:hover {
+    background-color: #e0e0e0;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }

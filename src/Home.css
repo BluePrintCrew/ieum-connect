@@ -150,3 +150,74 @@
   background-color: #e0e0e0;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+/* 검색 결과 리스트 전체 */
+.search-results {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 검색 결과 항목 스타일 */
+.story-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.story-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #555;
+}
+
+.story-name {
+  flex: 1;
+  margin-left: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.likes {
+  font-size: 14px;
+  color: #888;
+}
+
+/* 필터 옵션 스타일 */
+.filter-options {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.filter-options select {
+  padding: 10px 15px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px; /* 둥근 스타일 */
+  background-color: #f9f9f9;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-options select:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.no-results-message {
+  margin-top: 20px;
+  padding: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  color: #555;
+  background-color: #fce4ec; /* 연핑크 배경색 */
+  border: 2px solid #f8bbd0;
+  border-radius: 15px;
+  font-family: 'Comic Sans MS', 'Arial', sans-serif; /* 귀여운 폰트 */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* 가벼운 그림자 */
+}
