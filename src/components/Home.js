@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../Home.css';
 import AdSlider from './Adslider';
 import { useNavigate } from 'react-router-dom';
+import FooterNav from './Footernav';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -64,13 +65,8 @@ const Home = () => {
         </ul>
       </div>
 
-      {/* 하단 네비게이션 */}
-      <div className="footer-nav">
-        <button onClick={() => navigate('/home')}>홈 화면</button>
-        <button onClick={() => navigate('/record')}>스토리 기록하기</button>
-        <button onClick={() => navigate('/memory-plan')}>추억 계획하기</button>
-        <button onClick={() => navigate('/mypage')}>마이페이지</button>
-      </div>
+      {/* FooterNav 컴포넌트 사용 */}
+      <FooterNav />
     </div>
   );
 };

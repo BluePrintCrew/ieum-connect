@@ -4,16 +4,20 @@ import StoryRecord from './components/StoryRecord';
 import LoginPage from './LoginPage';
 import KakaoCallback from './KakaoCallback';
 import Home from './components/Home.js';
-import SearchMemory from './components/SearchMemory.js'
+import SearchMemory from './components/SearchMemory.js';
+import MyPage from './components/Mypage.js';
+import FooterNav from './components/Footernav';
+
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/home" element={<Home/>}      />
-        <Route path="/login" element={<LoginPage/>} /> 
-        <Route path="/record" element={<StoryRecord />} />
-        <Route path="/search" element={<SearchMemory />} />
-        <Route path="/oauth/kakao/callback" element={<KakaoCallback/>} /> {/*redirect */}
+        <Route path="/home" element={<><Home /><FooterNav /></>} />
+        <Route path="/login" element={<LoginPage />} /> 
+        <Route path="/record" element={<><StoryRecord /><FooterNav /></>} />
+        <Route path="/search" element={<><SearchMemory /><FooterNav /></>} />
+        <Route path="/mypage" element={<><MyPage /><FooterNav /></>} /> 
+        <Route path="/oauth/kakao/callback" element={<KakaoCallback />} /> {/*redirect */}
         {/* 
         <Route path="/share" element={<MemoryShare />} />
         <Route path="/search" element={<MemorySearch />} />

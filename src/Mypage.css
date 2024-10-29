@@ -1,0 +1,89 @@
+.mypage-container {
+    background-color: #ffe4e1;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .profile-edit-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .nickname {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .profile-edit-button {
+    background-color: #ffb6c1;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .mypage-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #d2691e;
+    margin: 20px 0;
+  }
+  
+  .memory-list {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+  }
+  
+  .memory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+  
+  .memory-title {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .likes {
+    color: #d2691e;
+    font-weight: bold;
+  }
+  
+  .add-friend-button {
+    background-color: #ffb6c1;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+  }
+ 
+  .middle-mypage {
+    align-items: center;
+    justify-content: space-between;
+    display: inline-block;
+    display: flex;
+    
+  }
+
+  .id-add-friend {
+        background-color: #ffb6c1;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: bold;
+      
+  }

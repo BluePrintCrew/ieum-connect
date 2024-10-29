@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../Home.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import FooterNav from './Footernav';
 
 const SearchMemory = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,12 +85,7 @@ const SearchMemory = () => {
       </div>
 
       {/* 하단 네비게이션 */}
-      <div className="footer-nav">
-        <button onClick={() => navigate('/home')}>홈 화면</button>
-        <button onClick={() => navigate('/record')}>스토리 기록하기</button>
-        <button onClick={() => navigate('/memory-plan')}>추억 계획하기</button>
-        <button onClick={() => navigate('/mypage')}>마이페이지</button>
-      </div>
+      <FooterNav />
     </div>
   );
 };

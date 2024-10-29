@@ -5,6 +5,7 @@ import { getAddressFromCoords } from '../function/kakaoGeocoder';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './storyrecord.css'; // 분리된 CSS 파일 임포트
 import { useNavigate } from 'react-router-dom';
+import FooterNav from './Footernav';
 
 const StoryRecord = () => {
   const [title, setTitle] = useState('');
@@ -153,14 +154,8 @@ const StoryRecord = () => {
           </Droppable>
         )}
       </DragDropContext>
-      <div className="footer-nav">
-        <button onClick={() => navigate('/home')}>홈 화면</button>
-        <button onClick={() => navigate('/record')}>스토리 기록하기</button>
-        <button onClick={() => navigate('/memory-plan')}>추억 계획하기</button>
-        <button onClick={() => navigate('/mypage')}>마이페이지</button>
-      </div>
+      <FooterNav />
     </div>
-    
   );
 };
 
