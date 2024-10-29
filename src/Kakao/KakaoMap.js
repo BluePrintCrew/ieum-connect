@@ -63,100 +63,62 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
         for (let i = 0; i < markers.length - 1; i++) {
           const start = markers[i];
           const end = markers[i + 1];
-          getDrivingRoute(start, end, createdMap);
+          getWalkingRouteFromTmap(start, end, createdMap);
         }
       }
     }
   }, [isMapLoaded, isSpotAdding, markers]);
 
-  // 차량 경로를 가져오는 함수
-  const getDrivingRoute = (start, end, map) => {
-    const url = `https://apis-navi.kakaomobility.com/v1/directions`;
-  
-    console.log('경로 요청 좌표:', `origin: ${start.lng},${start.lat}`, `destination: ${end.lng},${end.lat}`);
-  
+  // Tmap API를 통해 도보 경로 데이터를 가져오는 함수
+  const getWalkingRouteFromTmap = (start, end, map) => {
+    const url = `https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json`;
+
     axios
-      .get(url, {
-        params: {
-          origin: `${start.lng},${start.lat}`, // 경도, 위도 순서 확인
-          destination: `${end.lng},${end.lat}`,
-          waypoints: '',
-          priority: 'RECOMMEND',
-          car_fuel: 'GASOLINE',
-          car_hipass: false,
-        },
+      .post(url, {
+        startX: start.lng,
+        startY: start.lat,
+        endX: end.lng,
+        endY: end.lat,
+        reqCoordType: 'WGS84GEO',
+        resCoordType: 'WGS84GEO',
+        startName: '출발지',
+        endName: '도착지',
+      }, {
         headers: {
-          Authorization: `KakaoAK ${process.env.REACT_APP_KAKAO_REST_API_KEY}`,
+          appKey: process.env.REACT_APP_TMAP_API_KEY,
         },
       })
       .then((response) => {
-        const sections = response.data?.routes?.[0]?.sections;
-        if (sections && sections.length > 0) {
-          const points = [];
-          
-          sections.forEach((section) => {
-            if (section.roads && section.roads.length > 0) {
-              section.roads.forEach((road) => {
-                if (road.vertexes && road.vertexes.length > 0) {
-                  for (let i = 0; i < road.vertexes.length; i += 2) {
-                    points.push(
-                      new window.kakao.maps.LatLng(
-                        road.vertexes[i + 1],
-                        road.vertexes[i]
-                      )
-                    );
-                  }
-                }
-              });
-            }
-          });
+        const resultData = response.data.features;
+        const points = [];
 
-          if (points.length > 0) {
-            const polyline = new window.kakao.maps.Polyline({
-              path: points,
-              strokeWeight: 5,
-              strokeColor: '#FF0000',
-              strokeOpacity: 0.7,
-              strokeStyle: 'solid',
+        resultData.forEach((feature) => {
+          if (feature.geometry.type === 'LineString') {
+            feature.geometry.coordinates.forEach((coordinate) => {
+              points.push(new window.kakao.maps.LatLng(coordinate[1], coordinate[0]));
             });
-            polyline.setMap(map);
-
-            // 지도의 중심과 확대 수준을 폴리라인 경로에 맞게 조정
-            const bounds = new window.kakao.maps.LatLngBounds();
-            points.forEach((point) => bounds.extend(point));
-            map.setBounds(bounds);
-          } else {
-            console.warn('경로 데이터의 points가 비어 있습니다. 기본 직선을 그립니다.');
-            drawSimpleLine(start, end, map);
           }
+        });
+
+        if (points.length > 0) {
+          const polyline = new window.kakao.maps.Polyline({
+            path: points,
+            strokeWeight: 5,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.7,
+            strokeStyle: 'solid',
+          });
+          polyline.setMap(map);
         } else {
-          console.warn('경로 데이터의 sections가 없습니다. 기본 직선을 그립니다.');
-          drawSimpleLine(start, end, map);
+          console.warn('Tmap에서 경로 데이터를 가져오지 못했습니다.');
         }
       })
       .catch((error) => {
-        console.error('경로를 가져오는데 실패했습니다:', error);
-        drawSimpleLine(start, end, map);
+        console.error('Tmap 도보 경로 요청에 실패했습니다:', error);
       });
   };
 
-  // 간단히 두 지점 간 직선을 그리는 함수
-  const drawSimpleLine = (start, end, map) => {
-    const points = [
-      new window.kakao.maps.LatLng(start.lat, start.lng),
-      new window.kakao.maps.LatLng(end.lat, end.lng),
-    ];
-    const polyline = new window.kakao.maps.Polyline({
-      path: points,
-      strokeWeight: 5,
-      strokeColor: '#00FF00',
-      strokeOpacity: 0.7,
-      strokeStyle: 'solid',
-    });
-    polyline.setMap(map);
-  };
-
-  return <div id="map" style={{ width: '100%', height: '300px' }}></div>;
+  return <div id="map" style={{ width: '100%', height: '400px' }}></div>;
 };
 
 export default KakaoMap;

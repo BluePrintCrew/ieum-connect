@@ -7,7 +7,7 @@ import Home from './components/Home.js';
 import SearchMemory from './components/SearchMemory.js';
 import MyPage from './components/Mypage.js';
 import FooterNav from './components/Footernav';
-
+import Detail from './components/StoryDetail.js';
 function App() {
   return (
     <Router>
@@ -17,6 +17,7 @@ function App() {
         <Route path="/record" element={<><StoryRecord /><FooterNav /></>} />
         <Route path="/search" element={<><SearchMemory /><FooterNav /></>} />
         <Route path="/mypage" element={<><MyPage /><FooterNav /></>} /> 
+        <Route path="/detail" element={<><Detail /><FooterNav /></>} /> 
         <Route path="/oauth/kakao/callback" element={<KakaoCallback />} /> {/*redirect */}
         {/* 
         <Route path="/share" element={<MemoryShare />} />
