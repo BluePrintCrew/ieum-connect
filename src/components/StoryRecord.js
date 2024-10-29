@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
 import { getAddressFromCoords } from '../function/kakaoGeocoder';
@@ -15,6 +15,13 @@ const StoryRecord = () => {
   const [isSpotAdding, setIsSpotAdding] = useState(false);
   const [markers, setMarkers] = useState([]);
   const [addresses, setAddresses] = useState([]);
+  const [isDroppableLoaded, setIsDroppableLoaded] = useState(false);
+
+  useEffect(() => {
+    if (markers.length > 0) {
+      setIsDroppableLoaded(true);
+    }
+  }, [markers]);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files).filter((file) => file.type === 'image/jpeg');
@@ -86,7 +93,6 @@ const StoryRecord = () => {
       </div>
       <textarea placeholder="메모를 입력하세요... #해시태그" value={memo} onChange={handleMemoChange} style={{ width: '100%', height: '100px', marginBottom: '20px' }} />
       <div>
-        <h3>코스 만족도 설정</h3>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {[1, 2, 3].map((level) => (
             <span key={level} onClick={() => handlePreferenceChange(level)} style={{ cursor: 'pointer', fontSize: '30px', color: preference >= level ? 'red' : 'gray', marginLeft: level > 1 ? '10px' : '0' }}>
@@ -94,10 +100,8 @@ const StoryRecord = () => {
             </span>
           ))}
         </div>
-        <p>선택된 만족도: {preference}단계</p>
       </div>
       <div>
-        <h3>해시태그 추가</h3>
         <input type="text" placeholder="해시태그를 입력하세요" value={hashtagInput} onChange={handleHashtagChange} onKeyPress={handleHashtagKeyPress} style={{ width: '100%', padding: '10px', marginBottom: '10px' }} />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {hashtags.map((hashtag, index) => (
@@ -108,42 +112,39 @@ const StoryRecord = () => {
           ))}
         </div>
       </div>
-      <button onClick={() => console.log('API Key:', process.env.REACT_APP_KAKAO_REST_API_KEY)}>테스트</button>
       <button onClick={handleSubmit} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'green', color: 'white' }}>완료</button>
       <h3>저장된 Spot 정보:</h3>
-      <DragDropContext onDragEnd={(result) => {
-        onDragEnd(result);
-        // 마커 순서 변경 후 지도 업데이트
-        setMarkers((prevMarkers) => [...prevMarkers]);
-      }}>
-        <Droppable droppableId="droppable-markers">
-          {(provided) => (
-            <ul {...provided.droppableProps} ref={provided.innerRef} style={{ padding: 0, listStyle: 'none' }}>
-              {markers.map((marker, index) => (
-                <Draggable key={`marker-${index}`} draggableId={`marker-${index}`} index={index}>
-                  {(provided) => (
-                    <li
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      style={{
-                        userSelect: 'none',
-                        padding: '8px',
-                        margin: '4px',
-                        backgroundColor: '#f0f0f0',
-                        borderRadius: '4px',
-                        ...provided.draggableProps.style,
-                      }}
-                    >
-                      장소 {index + 1}
-                    </li>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </ul>
-          )}
-        </Droppable>
+      <DragDropContext onDragEnd={onDragEnd}>
+        {isDroppableLoaded && (
+          <Droppable droppableId="droppable-markers">
+            {(provided) => (
+              <ul {...provided.droppableProps} ref={provided.innerRef} style={{ padding: 0, listStyle: 'none' }}>
+                {markers.map((marker, index) => (
+                  <Draggable key={`marker-${index}`} draggableId={`marker-${index}`} index={index}>
+                    {(provided) => (
+                      <li
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={{
+                          userSelect: 'none',
+                          padding: '8px',
+                          margin: '4px',
+                          backgroundColor: '#f0f0f0',
+                          borderRadius: '4px',
+                          ...provided.draggableProps.style,
+                        }}
+                      >
+                        장소 {index + 1} - {marker.address}
+                      </li>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </ul>
+            )}
+          </Droppable>
+        )}
       </DragDropContext>
     </div>
   );
