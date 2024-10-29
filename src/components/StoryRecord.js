@@ -3,7 +3,7 @@ import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
 import { getAddressFromCoords } from '../function/kakaoGeocoder';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import './storyrecord.css'; // 분리된 CSS 파일 임포트
+import '../storyrecord.css';
 import { useNavigate } from 'react-router-dom';
 import FooterNav from './Footernav';
 

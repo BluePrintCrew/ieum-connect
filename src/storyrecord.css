@@ -76,7 +76,7 @@
   
   /* 입력 및 버튼 스타일 */
   .title-input, .hashtag-input, .memo-textarea {
-    width: 100%;
+    width: 94%;
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ccc;
