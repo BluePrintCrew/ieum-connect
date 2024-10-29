@@ -1,8 +1,8 @@
-// StoryRecord Component
 import React, { useState } from 'react';
 import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
 import { getAddressFromCoords } from '../function/kakaoGeocoder';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 const StoryRecord = () => {
   const [title, setTitle] = useState('');
@@ -55,6 +55,15 @@ const StoryRecord = () => {
     // Additional submit logic here
   };
 
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const updatedMarkers = Array.from(markers);
+    const [reorderedMarker] = updatedMarkers.splice(result.source.index, 1);
+    updatedMarkers.splice(result.destination.index, 0, reorderedMarker);
+    setMarkers(updatedMarkers);
+  };
+
   return (
     <div>
       <h1>스토리 기록하기</h1>
@@ -84,7 +93,6 @@ const StoryRecord = () => {
               {preference >= level ? '❤️' : '♡'}
             </span>
           ))}
-        
         </div>
         <p>선택된 만족도: {preference}단계</p>
       </div>
@@ -100,16 +108,43 @@ const StoryRecord = () => {
           ))}
         </div>
       </div>
-     {/*</div> <button onClick={console.log('API Key:', process.env.REACT_APP_KAKAO_REST_API_KEY);}테스트</button>*/}
-     <button onClick={() => console.log('API Key:', process.env.REACT_APP_KAKAO_REST_API_KEY)}>테스트</button>
-
+      <button onClick={() => console.log('API Key:', process.env.REACT_APP_KAKAO_REST_API_KEY)}>테스트</button>
       <button onClick={handleSubmit} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'green', color: 'white' }}>완료</button>
       <h3>저장된 Spot 정보:</h3>
-      <ul>
-        {markers.map((marker, index) => (
-          <li key={index}><strong>위도:</strong> {marker.lat}, <strong>경도:</strong> {marker.lng}, <strong>주소:</strong> {marker.address}, <strong>시간:</strong> {marker.date}</li>
-        ))}
-      </ul>
+      <DragDropContext onDragEnd={(result) => {
+        onDragEnd(result);
+        // 마커 순서 변경 후 지도 업데이트
+        setMarkers((prevMarkers) => [...prevMarkers]);
+      }}>
+        <Droppable droppableId="droppable-markers">
+          {(provided) => (
+            <ul {...provided.droppableProps} ref={provided.innerRef} style={{ padding: 0, listStyle: 'none' }}>
+              {markers.map((marker, index) => (
+                <Draggable key={`marker-${index}`} draggableId={`marker-${index}`} index={index}>
+                  {(provided) => (
+                    <li
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      style={{
+                        userSelect: 'none',
+                        padding: '8px',
+                        margin: '4px',
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: '4px',
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      장소 {index + 1}
+                    </li>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </ul>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 };

@@ -80,99 +80,57 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
         params: {
           origin: `${start.lng},${start.lat}`, // 경도, 위도 순서 확인
           destination: `${end.lng},${end.lat}`,
-          priority: 'RECOMMEND', // 경로 우선순위 설정 (RECOMMEND, SHORTEST 등)
-          vehicleType: '1', // 차량 타입 설정 (1: 일반 차량)
+          waypoints: '',
+          priority: 'RECOMMEND',
+          car_fuel: 'GASOLINE',
+          car_hipass: false,
         },
         headers: {
           Authorization: `KakaoAK ${process.env.REACT_APP_KAKAO_REST_API_KEY}`,
         },
       })
       .then((response) => {
-        // 전체 API 응답을 출력하여 응답 데이터 구조 확인
-        console.log('API 응답:', response.data);
-  
-        const routes = response.data.routes;
-        if (routes && routes.length > 0) {
-          const route = routes[0];
-          console.log('Routes 데이터:', route);
-  
-          if (route.sections && route.sections.length > 0) {
-            const points = [];
-  
-            route.sections.forEach((section, sectionIndex) => {
-              console.log(`Section ${sectionIndex}:`, section);
-  
-              // roads 필드가 있는 경우 사용 (우선적으로 roads 사용)
-              if (section.roads && section.roads.length > 0) {
-                section.roads.forEach((road, roadIndex) => {
-                  console.log(`Road ${roadIndex}:`, road);
-                  if (road.start && road.start.location && road.start.location.latitude && road.start.location.longitude) {
+        const sections = response.data?.routes?.[0]?.sections;
+        if (sections && sections.length > 0) {
+          const points = [];
+          
+          sections.forEach((section) => {
+            if (section.roads && section.roads.length > 0) {
+              section.roads.forEach((road) => {
+                if (road.vertexes && road.vertexes.length > 0) {
+                  for (let i = 0; i < road.vertexes.length; i += 2) {
                     points.push(
                       new window.kakao.maps.LatLng(
-                        road.start.location.latitude,
-                        road.start.location.longitude
+                        road.vertexes[i + 1],
+                        road.vertexes[i]
                       )
                     );
-                  } else {
-                    console.warn(`Road ${roadIndex}에 유효한 start location 데이터가 없습니다. 건너뜁니다.`);
                   }
-  
-                  if (road.end && road.end.location && road.end.location.latitude && road.end.location.longitude) {
-                    points.push(
-                      new window.kakao.maps.LatLng(
-                        road.end.location.latitude,
-                        road.end.location.longitude
-                      )
-                    );
-                  } else {
-                    console.warn(`Road ${roadIndex}에 유효한 end location 데이터가 없습니다. 건너뜁니다.`);
-                  }
-                });
-              } 
-              // guides 필드가 있는 경우 사용
-              else if (section.guides && section.guides.length > 0) {
-                section.guides.forEach((guide, guideIndex) => {
-                  if (guide.location && guide.location.latitude && guide.location.longitude) {
-                    points.push(
-                      new window.kakao.maps.LatLng(
-                        guide.location.latitude,
-                        guide.location.longitude
-                      )
-                    );
-                  } else {
-                    console.warn(`Guide ${guideIndex}에 유효한 location 데이터가 없습니다. 건너뜁니다.`);
-                  }
-                });
-              } else {
-                console.warn(`Section ${sectionIndex}에 roads, guides 데이터가 없습니다. 건너뜁니다.`);
-              }
-            });
-  
-            if (points && points.length > 0) {
-              // 폴리라인 그리기
-              const polyline = new window.kakao.maps.Polyline({
-                path: points,
-                strokeWeight: 5,
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.7,
-                strokeStyle: 'solid',
+                }
               });
-              polyline.setMap(map);
-
-              // 지도의 중심과 확대 수준을 폴리라인 경로에 맞게 조정
-              const bounds = new window.kakao.maps.LatLngBounds();
-              points.forEach((point) => bounds.extend(point));
-              map.setBounds(bounds);
-            } else {
-              console.warn('경로 데이터의 points가 비어 있습니다. 기본 직선을 그립니다.');
-              drawSimpleLine(start, end, map);
             }
+          });
+
+          if (points.length > 0) {
+            const polyline = new window.kakao.maps.Polyline({
+              path: points,
+              strokeWeight: 5,
+              strokeColor: '#FF0000',
+              strokeOpacity: 0.7,
+              strokeStyle: 'solid',
+            });
+            polyline.setMap(map);
+
+            // 지도의 중심과 확대 수준을 폴리라인 경로에 맞게 조정
+            const bounds = new window.kakao.maps.LatLngBounds();
+            points.forEach((point) => bounds.extend(point));
+            map.setBounds(bounds);
           } else {
-            console.warn('경로 데이터의 sections가 없습니다. 기본 직선을 그립니다.');
+            console.warn('경로 데이터의 points가 비어 있습니다. 기본 직선을 그립니다.');
             drawSimpleLine(start, end, map);
           }
         } else {
-          console.warn('경로 데이터가 없습니다. 기본 직선을 그립니다.');
+          console.warn('경로 데이터의 sections가 없습니다. 기본 직선을 그립니다.');
           drawSimpleLine(start, end, map);
         }
       })
