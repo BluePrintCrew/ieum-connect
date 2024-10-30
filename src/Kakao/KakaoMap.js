@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
+const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [map, setMap] = useState(null);
 
-  // Kakao Map API 스크립트를 동적으로 로드하고, 맵이 로드되면 상태를 업데이트하는 useEffect
+  // Kakao Map API 스크립트 로드 및 맵 로드 후 상태 업데이트
   useEffect(() => {
     const script = document.createElement('script');
-  
-    // 명시적으로 https:// 사용
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_KAKAO_APP_API_KEY}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_KAKAO_APP_API_KEY}&autoload=false&libraries=services`;
     script.async = true;
+
     script.onload = () => {
-      // API가 완전히 로드된 후에만 isMapLoaded를 true로 설정
       if (window.kakao && window.kakao.maps) {
         window.kakao.maps.load(() => setIsMapLoaded(true));
       } else {
@@ -23,21 +21,21 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
     document.head.appendChild(script);
     return () => document.head.removeChild(script);
   }, []);
-   
-  // 맵이 로드된 후에 지도와 마커 관련 작업을 수행하는 useEffect
+
+  // 맵이 로드된 후 지도와 마커 관련 작업을 수행하는 useEffect
   useEffect(() => {
     if (isMapLoaded) {
       const mapContainer = document.getElementById('map');
       const mapOption = {
-        center: new window.kakao.maps.LatLng(37.282, 127.046),
-        level: 3,
+        center: new window.kakao.maps.LatLng(center?.lat || 37.2838, center?.lng || 127.0454), // 전달받은 중심 좌표 설정, 없을 경우 아주대학교 좌표 사용
+        level: 5,
       };
       const createdMap = new window.kakao.maps.Map(mapContainer, mapOption);
       setMap(createdMap);
 
-      // 지도 클릭 시 마커 추가
-      window.kakao.maps.event.addListener(createdMap, 'click', (mouseEvent) => {
-        if (isSpotAdding) {
+      // 지도 클릭 시 마커 추가 기능
+      if (isSpotAdding) {
+        window.kakao.maps.event.addListener(createdMap, 'click', (mouseEvent) => {
           const latlng = mouseEvent.latLng;
           const newMarker = { lat: latlng.getLat(), lng: latlng.getLng() };
           setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
@@ -47,18 +45,19 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
             marker.setMap(null);
             setMarkers((prevMarkers) => prevMarkers.filter((m) => m.lat !== newMarker.lat || m.lng !== newMarker.lng));
           });
-        }
-      });
+        });
+      }
 
-      // 기존 마커 표시
+      // 기존 마커 추가
       markers.forEach((marker) => {
-        const kakaoMarker = new window.kakao.maps.Marker({
-          position: new window.kakao.maps.LatLng(marker.lat, marker.lng),
+        const markerPosition = new window.kakao.maps.LatLng(marker.lat, marker.lng);
+        new window.kakao.maps.Marker({
           map: createdMap,
+          position: markerPosition,
         });
       });
 
-      // 도보 경로 찾기 - 마커가 두 개 이상일 때만 수행
+      // 경로 표시 - 마커가 두 개 이상일 때만 수행
       if (markers.length > 1) {
         for (let i = 0; i < markers.length - 1; i++) {
           const start = markers[i];
@@ -67,27 +66,31 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
         }
       }
     }
-  }, [isMapLoaded, isSpotAdding, markers]);
+  }, [isMapLoaded, markers, isSpotAdding, center]);
 
   // Tmap API를 통해 도보 경로 데이터를 가져오는 함수
   const getWalkingRouteFromTmap = (start, end, map) => {
     const url = `https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json`;
 
     axios
-      .post(url, {
-        startX: start.lng,
-        startY: start.lat,
-        endX: end.lng,
-        endY: end.lat,
-        reqCoordType: 'WGS84GEO',
-        resCoordType: 'WGS84GEO',
-        startName: '출발지',
-        endName: '도착지',
-      }, {
-        headers: {
-          appKey: process.env.REACT_APP_TMAP_API_KEY,
+      .post(
+        url,
+        {
+          startX: start.lng,
+          startY: start.lat,
+          endX: end.lng,
+          endY: end.lat,
+          reqCoordType: 'WGS84GEO',
+          resCoordType: 'WGS84GEO',
+          startName: '출발지',
+          endName: '도착지',
         },
-      })
+        {
+          headers: {
+            appKey: process.env.REACT_APP_TMAP_API_KEY,
+          },
+        }
+      )
       .then((response) => {
         const resultData = response.data.features;
         const points = [];

@@ -154,4 +154,40 @@
   }
 
 
+ /* storydetail.css */
+
+/* 사진 슬라이드 부분의 스타일 */
+.story-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  }
   
+  .photo-item {
+    width: 200px; /* 사진 크기를 고정 */
+    height: 200px; /* 사진 크기를 고정 */
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  
+  .photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 비율을 유지하며 사진을 꽉 채움 */
+  }
+  
+  .photo-item span {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
+   

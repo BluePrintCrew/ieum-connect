@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import '../Home.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import FooterNav from './Footernav';
 
 const SearchMemory = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [filterOption, setFilterOption] = useState('추천순');
-  const navigate = useNavigate();
 
+  // URL에서 검색어 추출 및 상태 업데이트
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get('query');
+    if (query) {
+      setSearchQuery(query);
+      fetchSearchResults(query);
+    }
+  }, [location.search]);
+
+  // 필터 옵션 변경 시 검색 결과 업데이트
   useEffect(() => {
     if (searchQuery) {
-      fetchSearchResults();
+      fetchSearchResults(searchQuery);
     }
   }, [filterOption]);
 
@@ -21,17 +33,16 @@ const SearchMemory = () => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      fetchSearchResults();
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
     }
   };
 
-  //'http://localhost:8080/api/stories/search'
-  const fetchSearchResults = async () => {
+  const fetchSearchResults = async (query) => {
     try {
-      const response = await axios.get('mock/beststories.json', {
+      const response = await axios.get('/mock/beststories.json', {
         params: {
-          hashtag: searchQuery,
+          hashtag: query,
           sort: filterOption === '추천순' ? 'likes' : 'date',
         },
       });
