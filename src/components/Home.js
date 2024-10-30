@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../Home.css';
 import AdSlider from './Adslider';
 import { useNavigate } from 'react-router-dom';
@@ -7,15 +7,28 @@ import FooterNav from './Footernav';
 const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [bestStories, setBestStories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // BEST 스토리 데이터 배열 (서버에서 가져와야 할 부분)
-  const bestStories = [
-    { id: 1, title: "행복한 여행", likes: 120 },
-    { id: 2, title: "맛있는 음식 여행", likes: 98 },
-    { id: 3, title: "도시 탐방", likes: 75 },
-    { id: 4, title: "산과 바다의 조화", likes: 67 },
-    { id: 5, title: "자연과 함께하는 힐링", likes: 55 },
-  ];
+  // JSON 파일에서 데이터를 불러오는 함수
+  useEffect(() => {
+    const fetchBestStories = async () => {
+      try {
+        const response = await fetch('/mock/beststories.json'); // public 폴더 내 JSON 파일 경로
+        if (!response.ok) {
+          throw new Error('네트워크 응답에 문제가 있습니다.');
+        }
+        const data = await response.json();
+        setBestStories(data);
+      } catch (error) {
+        console.error('데이터를 가져오는 도중 문제가 발생했습니다:', error);
+      } finally {
+        setIsLoading(false); // 데이터 로딩 완료 여부 설정
+      }
+    };
+
+    fetchBestStories();
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -54,15 +67,27 @@ const Home = () => {
       {/* BEST 스토리 */}
       <div className="best-story-section">
         <h2>BEST 스토리</h2>
-        <ul className="story-list">
-          {bestStories.map((story, index) => (
-            <li key={story.id} className="story-item">
-              <span className="story-number">{index + 1}.</span>
-              <span className="story-name">{story.title}</span>
-              <span className="likes">좋아요 {story.likes}개</span>
-            </li>
-          ))}
-        </ul>
+        {isLoading ? (
+          <p>스토리를 불러오는 중...</p>
+        ) : (
+          <ul className="story-list">
+            {bestStories.length > 0 ? (
+              bestStories.map((story, index) => (
+                <li 
+                  key={story.storyId} 
+                  className="story-item" 
+                  onClick={() => navigate(`/story/detail/${story.storyId}`)}
+                >
+                  <span className="story-number">{index + 1}.</span>
+                  <span className="story-name">{story.title}</span>
+                  <span className="likes">좋아요 {story.likes}개</span>
+                </li>
+              ))
+            ) : (
+              <p>스토리가 없습니다.</p>
+            )}
+          </ul>
+        )}
       </div>
 
       {/* FooterNav 컴포넌트 사용 */}

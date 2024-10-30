@@ -26,9 +26,10 @@ const SearchMemory = () => {
     }
   };
 
+  //'http://localhost:8080/api/stories/search'
   const fetchSearchResults = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/stories/search', {
+      const response = await axios.get('mock/beststories.json', {
         params: {
           hashtag: searchQuery,
           sort: filterOption === '추천순' ? 'likes' : 'date',
@@ -71,10 +72,10 @@ const SearchMemory = () => {
       <div className="search-results">
         {searchResults.length > 0 ? (
           searchResults.map((result, index) => (
-            <div key={result.storyId} className="story-item">
+            <div key={result.storyId} className="story-item" onClick={() => navigate(`/story/detail/${result.storyId}`)}>
               <span className="story-number">{index + 1}.</span>
               <span className="story-name">{result.title}</span>
-              <span className="likes">좋아요 {result.photoCount}개</span>
+              <span className="likes">좋아요 {result.likes}개</span>
             </div>
           ))
         ) : (

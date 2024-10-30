@@ -41,3 +41,9 @@
     transform: scale(0.95);
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 }
+.footer-nav + .content {
+    padding-bottom: 70px; /* 푸터 높이만큼 여백 추가 */
+  }
+  body {
+    padding-bottom: 70px; /* 푸터 높이만큼 여백 추가 */
+  }
