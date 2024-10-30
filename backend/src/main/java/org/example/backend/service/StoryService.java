@@ -6,6 +6,8 @@ import org.example.backend.dto.PhotoInfoDTO;
 import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.repository.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +46,11 @@ public class StoryService {
             return storyRepository.findByUserUserId(memberId);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Story> getStoriesByLikes(Pageable pageable) {
+        return storyRepository.findAllByOrderByLikeCountDesc(pageable);
+    }
+
     @Transactional
     public Story getStoryById(Long id) {
             return storyRepository.findByStoryId(id);
@@ -51,8 +58,8 @@ public class StoryService {
 
 
     @Transactional
-    public List<Story> findStoriesByHashtag(String hashtagName){
-        return storyRepository.findByRouteHashtagsNameContainingIgnoreCase(hashtagName);
+    public Page<Story> findStoriesByHashtag(String hashtagName, Pageable pageable){
+        return storyRepository.findByRouteHashtagsNameContainingIgnoreCase(hashtagName,pageable);
     }
     // 선호도 추가는 추후에 진행
     @Transactional
@@ -79,6 +86,11 @@ public class StoryService {
 
         story = storyRepository.save(story);
         return story;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Story> getStoriesByTime(Pageable pageable) {
+        return storyRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
     @Transactional

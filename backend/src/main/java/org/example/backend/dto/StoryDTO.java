@@ -24,6 +24,10 @@ public class StoryDTO {
         private RouteDTO route;
         private List<PhotoDTO> photos;
         private List<String> hashtags;
+        // 좋아요 수 필드 추가
+        private int likeCount;
+        // 댓글 목록 필드 추가
+        private List<CommentDTO> comments;
         private int photoCount;
 
         // 생성자, getter, setter 등은 lombok 어노테이션으로 대체
@@ -70,5 +74,17 @@ public class StoryDTO {
         private LocalDateTime takenAt;
         private BigDecimal latitude;
         private BigDecimal longitude;
+    }
+
+    // 댓글 DTO 추가
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CommentDTO {
+        private Long commentId;
+        private String content;
+        private LocalDateTime createdAt;
+        private String username;
     }
 }

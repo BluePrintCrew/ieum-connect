@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,8 +42,8 @@ class PhotoServiceTest {
         // 결과 검증
         assertNotNull(result, "추출된 메타데이터는 null이 아니어야 합니다.");
         assertEquals(file.getName(), result.getFileName(), "파일 이름이 일치해야 합니다.");
-        assertTrue(result.getLatitude() != 0, "위도 값이 있어야 합니다.");
-        assertTrue(result.getLongitude() != 0, "경도 값이 있어야 합니다.");
+        assertTrue(result.getLatitude().compareTo(BigDecimal.ZERO) != 0, "위도 값이 있어야 합니다.");
+        assertTrue(result.getLongitude().compareTo(BigDecimal.ZERO) != 0, "경도 값이 있어야 합니다.");
         assertNotNull(result.getTakenAt(), "날짜 및 시간 정보가 있어야 합니다.");
 
         // 구체적인 값 검증 (실제 이미지의 메타데이터에 따라 조정 필요)
@@ -50,6 +51,8 @@ class PhotoServiceTest {
         // assertEquals(expectedLongitude, result.getLongitude(), 0.0001);
         // assertTrue(result.getDateTime().contains("예상되는 날짜 형식"));
     }
+
+
 
     @Test
     void testExtractMetadataWithNonJpegFile() throws IOException, ImageReadException {

@@ -47,6 +47,19 @@ public class Story {
     @OneToOne(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     private Route route;
 
+    // 좋아요 리스트 추가
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL)
+    private List<Like> likes = new ArrayList<>();
+
+    // 좋아요 수를 저장하는 필드 추가
+    @Column(name = "like_count", columnDefinition = "integer default 0")
+    private Integer likeCount = 0;
+
+    // 댓글 리스트 추가
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL)
+    private List<Comment> comments = new ArrayList<>();
+
+
     // Getters and setters
     // ...
 
