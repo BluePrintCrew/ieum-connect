@@ -3,6 +3,7 @@ package org.example.backend.controller;
 
 
 import org.example.backend.config.TestSecurityConfig;
+import org.example.backend.kakaosearch.KakaoKeywordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -40,6 +41,7 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.backend.domain.*;
@@ -56,6 +58,9 @@ class StoryControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private KakaoKeywordService kakaoKeywordService;  // 추가
 
     @MockBean
     private StoryService storyService;
@@ -200,8 +205,8 @@ class StoryControllerTest {
     }
 
     @Test
-    @DisplayName("해시태그로 스토리 검색 - 정렬 및 페이징 테스트")
-    void searchStoriesByHashtag_WithSortingAndPaging() throws Exception {
+    @DisplayName("해시태그로 스토리 검색 - 직접 검색 결과 있음")
+    void searchStoriesByHashtag_DirectSearchSuccess() throws Exception {
         // Given
         List<Story> stories = List.of(createSampleStory());
         Page<Story> storyPage = new PageImpl<>(stories);
@@ -222,6 +227,97 @@ class StoryControllerTest {
                 .andExpect(jsonPath("$.content[0].likeCount").value(10))
                 .andExpect(jsonPath("$.content[0].route.routePoints[0].latitude")
                         .value("37.5665"))
+                .andDo(print());
+    }
+    @Test
+    @DisplayName("해시태그로 스토리 검색 - 직접 검색 결과 없음, 연관 검색어로 검색 성공")
+    void searchStoriesByHashtag_RelatedSearchSuccess() throws Exception {
+        // Given
+        // 1. 직접 검색 결과 빈 페이지로 설정 (null이 아님)
+        when(storyService.findStoriesByHashtag(eq("판교"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // 2. 카카오 API 연관 검색어 반환 설정
+        List<String> relatedKeywords = Arrays.asList("분당", "성남", "판교역");
+        when(kakaoKeywordService.searchByKeywords("판교"))
+                .thenReturn(relatedKeywords);
+
+        // 3. 연관 검색어로 검색 시 결과 설정 (모든 연관 키워드에 대해 설정)
+        Story story = createSampleStory();
+        story.setTitle("Related Story");
+        List<Story> storyList = Collections.singletonList(story);
+        Page<Story> relatedStoryPage = new PageImpl<>(storyList);
+
+        for (String keyword : relatedKeywords) {
+            when(storyService.findStoriesByHashtag(eq(keyword), any(Pageable.class)))
+                    .thenReturn(relatedStoryPage);
+        }
+
+        // When & Then
+        mockMvc.perform(get("/api/stories/search")
+                        .param("hashtag", "판교")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt")
+                        .param("direction", "desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Related Story"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("해시태그로 스토리 검색 - 직접 검색과 연관 검색 모두 결과 없음")
+    void searchStoriesByHashtag_NoResults() throws Exception {
+        // Given
+        // 1. 직접 검색 결과 없음
+        when(storyService.findStoriesByHashtag(anyString(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(new ArrayList<>()));
+
+        // 2. 카카오 API 연관 검색어 반환
+        List<String> relatedKeywords = Arrays.asList("분당", "성남", "판교역");
+        when(kakaoKeywordService.searchByKeywords(anyString()))
+                .thenReturn(relatedKeywords);
+
+        // 3. 연관 검색어로도 결과 없음
+        for (String keyword : relatedKeywords) {
+            when(storyService.findStoriesByHashtag(eq(keyword), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(new ArrayList<>()));
+        }
+
+        // When & Then
+        mockMvc.perform(get("/api/stories/search")
+                        .param("hashtag", "존재하지않는해시태그")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt")
+                        .param("direction", "desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("해시태그로 스토리 검색 - 카카오 API 실패시에도 정상 동작")
+    void searchStoriesByHashtag_KakaoApiFailure() throws Exception {
+        // Given
+        // 1. 직접 검색 결과 없음
+        when(storyService.findStoriesByHashtag(anyString(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(new ArrayList<>()));
+
+        // 2. 카카오 API 호출 실패 시뮬레이션
+        when(kakaoKeywordService.searchByKeywords(anyString()))
+                .thenReturn(Collections.emptyList());
+
+        // When & Then
+        mockMvc.perform(get("/api/stories/search")
+                        .param("hashtag", "testTag")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt")
+                        .param("direction", "desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
                 .andDo(print());
     }
 

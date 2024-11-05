@@ -3,35 +3,39 @@ package org.example.backend.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.example.backend.domain.Hashtag;
 import org.example.backend.domain.Story;
 import org.example.backend.domain.User;
 import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.dto.StoryDTO;
+import org.example.backend.kakaosearch.KakaoKeywordService;
 import org.example.backend.service.StoryService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/stories")
 @Tag(name = "Story CRUD 로직" , description = "조회는 회원, 해시테그검색으로 조회")
 public class StoryController {
 
     private final StoryService storyService;
+    private final KakaoKeywordService kakaoKeywordService;
 
-    public StoryController(StoryService storyService) {
+    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService) {
         this.storyService = storyService;
+        this.kakaoKeywordService = kakaoKeywordService;
     }
 
 
@@ -101,9 +105,10 @@ public class StoryController {
 //        return ResponseEntity.ok(photoDTOs);
 //    }
 
+    @PreAuthorize("permitAll()")
     @GetMapping("/search")
     @Operation(summary = "해시태그 이름으로 조회",
-            description = "페이징 처리된 스토리 목록 반환. 정렬 기준: createdAt(생성일), title(제목), likes(좋아요수)")
+            description = "페이징 처리된 스토리 목록 반환. 직접 검색 결과가 없을 경우 연관 키워드로 검색")
     public ResponseEntity<Page<StoryDTO.Response>> searchStoriesByHashtag(
             @RequestParam("hashtag") String hashtagName,
             @RequestParam(defaultValue = "0") int page,
@@ -111,25 +116,69 @@ public class StoryController {
             @RequestParam(defaultValue = "createdAt") String sort,
             @RequestParam(defaultValue = "desc") String direction) {
 
-        // 정렬 필드 유효성 검사
-        StorySortField sortField = StorySortField.fromString(sort); // sort에 대한 값이 있는가
 
+        log.info("Search request received - hashtag: {}", hashtagName); // 컨트롤러 진입 로그
+
+        // 정렬 필드 유효성 검사
+        StorySortField sortField = StorySortField.fromString(sort);
+        log.info("Sort field: {}, direction: {}", sortField, direction);
         // 정렬 방향 설정
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? //방향에 대해서는?
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
 
-        // 정렬 조건이 여러 개인 경우
-        Sort sorting = Sort.by(sortDirection, sortField.getFieldName());
+        // 정렬 조건 설정
+        Sort sorting = Sort.by(sortDirection, sortField.getFieldName()); // 정렬 조건 설정
 
-        // 추가 정렬 조건 (예: 동일한 값이 있을 경우 생성일시로 2차 정렬)
+        // 추가 정렬 조건
         if (sortField != StorySortField.CREATED_AT) {
             sorting = sorting.and(Sort.by(Sort.Direction.DESC, "createdAt"));
         }
 
-        Pageable pageable = PageRequest.of(page, size, sorting);
+        Pageable pageable = PageRequest.of(page, size, sorting); // 정렬 조건, 페이지, 사이즈에 대해서 설정
 
-        Page<Story> stories = storyService.findStoriesByHashtag(hashtagName, pageable); // 해시테그로 검색
-        Page<StoryDTO.Response> storyDTOs = stories.map(this::convertToDTOWithoutImages); // 페이징을 통한 검색
+        // 1. 직접 해시태그로 검색
+        Page<Story> stories = storyService.findStoriesByHashtag(hashtagName, pageable); // 해당 pageable을 통해서 정렬된 결과물 추출
+        log.info("Direct search results size: {}", stories.getContent().size());
+        // 2. 검색 결과가 없을 경우 카카오 API로 연관 키워드 검색
+        if (stories.isEmpty()) {
+            List<Story> relatedStories = new ArrayList<>();
+            log.info("No direct results found, searching related keywords");
+            // 카카오 API로 연관 키워드 가져오기
+            List<String> relatedKeywords = kakaoKeywordService.searchByKeywords(hashtagName);
+            log.info("Related keywords found: {}", relatedKeywords);
+            // 각 연관 키워드로 검색
+            for (String relatedKeyword : relatedKeywords) {
+                Page<Story> relatedResults = storyService.findStoriesByHashtag(
+                        relatedKeyword,
+                        PageRequest.of(0, pageable.getPageSize(), sorting)
+                );
+                relatedStories.addAll(relatedResults.getContent());
+            }
+
+            // 중복 제거
+            List<Story> uniqueStories = relatedStories.stream()
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // 페이징 처리
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), uniqueStories.size());
+
+            // 결과가 있는 경우에만 서브리스트 생성
+            if (!uniqueStories.isEmpty() && start < uniqueStories.size()) {
+                Page<Story> relatedStoriesPage = new PageImpl<>(
+                        uniqueStories.subList(start, end),
+                        pageable,
+                        uniqueStories.size()
+                );
+
+                // Story를 DTO로 변환
+                return ResponseEntity.ok(relatedStoriesPage.map(this::convertToDTOWithoutImages));
+            }
+        }
+
+        // 직접 검색 결과가 있거나, 연관 검색 결과도 없는 경우
+        Page<StoryDTO.Response> storyDTOs = stories.map(this::convertToDTOWithoutImages);
 
         return storyDTOs.isEmpty() ?
                 ResponseEntity.noContent().build() :

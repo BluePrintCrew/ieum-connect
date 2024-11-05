@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none # application 첫 실행 시에만 create, 이후에는 none 혹은 주석처리
+      ddl-auto: update # application 첫 실행 시에만 create, 이후에는 none 혹은 주석처리
     show-sql: true
 
 springdoc:
@@ -25,3 +25,10 @@ springdoc:
     doc-expansion: none
   paths-to-match:
     - /api/**
+logging:
+  level:
+    root: INFO
+    org.example.backend.controller: DEBUG  # StoryController가 있는 패키지
+    org.springframework: INFO
+    org.springframework.security: DEBUG  # 시큐리티 관련 로그
+    org.springframework.web: DEBUG
