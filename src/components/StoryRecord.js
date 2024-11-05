@@ -3,6 +3,8 @@ import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
 import { getAddressFromCoords } from '../function/kakaoGeocoder';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import * as tf from '@tensorflow/tfjs';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '../storyrecord.css';
 import { useNavigate } from 'react-router-dom';
 import FooterNav from './Footernav';
@@ -19,7 +21,17 @@ const StoryRecord = () => {
   const [markers, setMarkers] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [isDroppableLoaded, setIsDroppableLoaded] = useState(false);
+  const [model, setModel] = useState(null);
   const navigate = useNavigate();
+
+  // 모델 로드
+  useEffect(() => {
+    const loadModel = async () => {
+      const loadedModel = await cocoSsd.load();
+      setModel(loadedModel);
+    };
+    loadModel();
+  }, []);
 
   useEffect(() => {
     if (markers.length > 0) {
@@ -32,8 +44,33 @@ const StoryRecord = () => {
     if (files.length > 0) {
       setSelectedFiles([...selectedFiles, ...files]);
       setImagePreviews([...imagePreviews, ...files.map((file) => URL.createObjectURL(file))]);
-      files.forEach((file) => extractExifData(file, addMarkerFromExif));
+      files.forEach((file) => {
+        extractExifData(file, addMarkerFromExif);
+        detectObjectsInImage(file);
+      });
     }
+  };
+
+  // 이미지에서 객체를 감지하는 함수
+  const detectObjectsInImage = async (file) => {
+    if (!model) {
+      console.error('모델이 아직 로드되지 않았습니다.');
+      return;
+    }
+
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = async () => {
+      try {
+        const predictions = await model.detect(img);
+        const detectedLabels = predictions.map((prediction) => prediction.class);
+        console.log("감지된 객체:", detectedLabels);
+        setHashtags((prevHashtags) => [...prevHashtags, ...detectedLabels]);
+      } catch (error) {
+        console.error('객체 감지 중 오류 발생:', error);
+      }
+    };
   };
 
   const addMarkerFromExif = (data) => {
