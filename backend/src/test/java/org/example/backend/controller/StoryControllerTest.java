@@ -147,7 +147,7 @@ class StoryControllerTest {
         request.setHashtags(List.of("tag1", "tag2"));
 
         Story savedStory = createSampleStory();
-        when(storyService.createStory(any(User.class), anyString(), anyString(), anyInt(), anyList(), anyList()))
+        when(storyService.createStory(any(User.class), anyString(), anyString(), anyInt(), anyList(),anyList(), anyList()))
                 .thenReturn(savedStory);
 
         // 스토리 정보를 JSON으로 변환

@@ -51,7 +51,7 @@ public class StoryController {
             tempUser.setUserId(1L);
 
             Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
-                    request.getPreference(), request.getHashtags(), images);
+                    request.getPreference(), request.getHashtags(),request.getRoutePoints(), images);
 
             ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
             response.setStatus("success");

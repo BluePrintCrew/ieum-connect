@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,7 +64,7 @@ public class StoryService {
     }
     // 선호도 추가는 추후에 진행
     @Transactional
-    public Story createStory(User user, String title, String memo, int preference, List<String> hashtags, List<MultipartFile> images) throws IOException {
+    public Story createStory(User user, String title, String memo, int preference, List<String> hashtags, List<ResponseStoryDto.RoutePointDTO> routePointDTOS, List<MultipartFile> images) throws IOException {
         Story story = new Story();
         story.setUser(user);
         story.setTitle(title);
@@ -75,7 +76,7 @@ public class StoryService {
         route.setStory(story);
         story.setRoute(route); // 여기서 story route설정.
 
-        List<RoutePoint> routePoints = createRoutePoints(images, route); // 해당 받아온 images로 저장.
+        List<RoutePoint> routePoints = createRoutePoints(routePointDTOS, route); // routePoint로 저장
         route.setRoutePoints(routePoints); // route가 갖는 루트 포인트들
 
         List<Photo> photos = createPhotos(images, story); // 각 image 들을 정리하고 이들을 스토리에 투기
@@ -105,29 +106,18 @@ public class StoryService {
         return byStoryId; // default를 private로 일단 두는게 좋을 것 같다.
     }
 
-    private List<RoutePoint> createRoutePoints(List<MultipartFile> images, Route route) throws IOException {
-        List<PhotoInfoDTO> photoInfoList = images.stream()
-                .map(image -> {
-                    try {
-                        return photoService.extractMetadata(image);
-                    } catch (IOException | ImageReadException e) {
-                        throw new RuntimeException("이미지 메타데이터 추출 실패", e);
-                    }
-                })
-                .sorted(Comparator.comparing(PhotoInfoDTO::getTakenAt))
-                .collect(Collectors.toList());
 
-        List<RoutePoint> routePoints = IntStream.range(0, photoInfoList.size())
-                .mapToObj(i -> {
-                    PhotoInfoDTO photoInfo = photoInfoList.get(i);
-                    RoutePoint point = new RoutePoint();
-                    point.setRoute(route);
-                    point.setLatitude(photoInfo.getLatitude());
-                    point.setLongitude(photoInfo.getLongitude());
-                    point.setOrderNum(i);
-                    return point;
-                })
-                .collect(Collectors.toList());
+    private List<RoutePoint> createRoutePoints(List<ResponseStoryDto.RoutePointDTO> routePointDTOS, Route route) throws IOException {
+
+        List<RoutePoint> routePoints = new ArrayList<>();
+        for (ResponseStoryDto.RoutePointDTO routePointDTO : routePointDTOS) {
+            RoutePoint routePoint = new RoutePoint();
+            routePoint.setLatitude(routePointDTO.getLatitude());
+            routePoint.setLongitude(routePointDTO.getLongitude());
+            routePoint.setOrderNum(routePointDTO.getOrderNum());
+            routePoint.setRoute(route);
+            routePoints.add(routePoint);
+        }
 
         return routePointRepository.saveAll(routePoints);
     }

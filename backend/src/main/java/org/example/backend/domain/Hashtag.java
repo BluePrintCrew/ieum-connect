@@ -23,6 +23,7 @@ public class Hashtag {
     @ManyToMany(mappedBy = "hashtags")
     private List<Route> routes = new ArrayList<>();
 
+
     // Getters and setters
     // ...
 }

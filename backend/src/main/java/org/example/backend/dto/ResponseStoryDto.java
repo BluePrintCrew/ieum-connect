@@ -1,11 +1,13 @@
 package org.example.backend.dto;
 
 
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.domain.Story;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -17,6 +19,7 @@ public class ResponseStoryDto {
         private String memo;
         private int preference;
         private List<String> hashtags;
+        private List<RoutePointDTO> routePoints;
 
     }
 
@@ -44,6 +47,16 @@ public class ResponseStoryDto {
     public static class ErrorResponse {
         private String status;
         private String message;
+    }
+
+    @Data
+    @RequiredArgsConstructor
+    @AllArgsConstructor
+    public static class RoutePointDTO{
+        private BigDecimal latitude;
+        private BigDecimal longitude;
+        private Integer orderNum;
+
     }
 }
 
