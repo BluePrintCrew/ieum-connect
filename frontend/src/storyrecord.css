@@ -1,0 +1,200 @@
+/* 기본 컨테이너 스타일 */
+.storyrecord-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #f0f8ff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.storyrecord-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* 지도 및 이미지 미리보기 */
+.map-container {
+  border: 1px solid gray;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.map-container.spot-adding {
+  border: 3px solid #007bff;
+  opacity: 0.8;
+}
+
+.spot-adding-notice {
+  color: #ff69b4;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* 이미지 미리보기 */
+.image-preview-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.image-preview {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 해시태그 스타일 */
+.hashtag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hashtag {
+  background-color: #e0e0e0;
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hashtag-remove {
+  margin-left: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: red;
+}
+
+/* 입력 및 버튼 스타일 */
+.title-input, .hashtag-input, .memo-textarea {
+  width: 94%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.memo-textarea {
+  height: 100px;
+}
+
+/* 버튼 정렬 컨테이너 */
+.button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.toggle-spot-button, .submit-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.2s;
+  margin: 10px 0;
+}
+
+.toggle-spot-button.active {
+  background-color: #ff4757;
+}
+
+.toggle-spot-button {
+  background-color: #007bff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-spot-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.submit-button {
+  background-color: #28a745;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+/* 선호도 아이콘 */
+.preference-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.preference-icon {
+  cursor: pointer;
+  font-size: 30px;
+  color: gray;
+  margin-left: 10px;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.preference-icon.active {
+  color: #ff4757;
+}
+
+.preference-icon:hover {
+  transform: scale(1.2);
+}
+
+/* 드래그 앤 드롭 스타일 */
+.marker-list {
+  padding: 0;
+  list-style: none;
+}
+
+.marker-item {
+  user-select: none;
+  padding: 8px;
+  margin: 4px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 추천 키워드 애니메이션 스타일 */
+.recommended-keywords-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.recommended-keyword {
+  background-color: #ffd700;
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  cursor: pointer;
+  animation: bounce 0.3s ease infinite alternate;
+  transition: transform 0.2s;
+}
+
+.recommended-keyword:hover {
+  transform: scale(1.1);
+}
+
+@keyframes bounce {
+  100% {
+      transform: translateY(-10px);
+  }
+}

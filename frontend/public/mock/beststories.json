@@ -1,0 +1,5 @@
+[
+    { "storyId": 1, "title": "행복한 여행", "likes": 120 },
+    { "storyId": 2, "title": "맛있는 음식 여행", "likes": 98 },
+    { "storyId": 3, "title": "도시 탐방", "likes": 75 }
+]

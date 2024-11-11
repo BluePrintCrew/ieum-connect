@@ -5,9 +5,13 @@ const AdSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const images = [
-    '/image1.jpg',
-    '/image2.jpg',
-    '/image3.jpg'
+    '/image1.jpeg',
+    '/image2.jpeg',
+    '/image3.jpeg',
+    '/image4.jpeg',
+    '/image5.jpeg',
+    '/image6.jpeg',
+    '/image7.jpeg'
 
    
     // 필요한 만큼 이미지 추가

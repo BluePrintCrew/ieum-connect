@@ -1,113 +1,127 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const KakaoMap = ({ isSpotAdding }) => {
-  const [isMapLoaded, setIsMapLoaded] = useState(false); // 지도 로드 상태
-  const [markers, setMarkers] = useState([]); // 마커 배열
-  const [map, setMap] = useState(null); // 지도 객체 상태 저장
-  const [currentCenter, setCurrentCenter] = useState({ lat: 37.2804, lng: 127.0176 }); // 현재 중심 좌표 저장
+const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [map, setMap] = useState(null);
 
+  // Kakao Map API 스크립트 로드 및 맵 로드 후 상태 업데이트
   useEffect(() => {
-    // 카카오 맵 스크립트를 동적으로 로드
     const script = document.createElement('script');
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=a2ca7d06d92a3ddceb626bb7bcce2ab8&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_KAKAO_APP_API_KEY}&autoload=false&libraries=services`;
     script.async = true;
 
-    // 스크립트 로드가 완료되면 실행
     script.onload = () => {
-      window.kakao.maps.load(() => {
-        setIsMapLoaded(true); // 지도 로드 완료 상태로 설정
-      });
+      if (window.kakao && window.kakao.maps) {
+        window.kakao.maps.load(() => setIsMapLoaded(true));
+      } else {
+        console.error('카카오 맵 스크립트 로딩 실패');
+      }
     };
-
-    document.head.appendChild(script); // 스크립트를 head에 추가
-
-    return () => {
-      // 컴포넌트 언마운트 시 스크립트 제거
-      document.head.removeChild(script);
-    };
+    document.head.appendChild(script);
+    return () => document.head.removeChild(script);
   }, []);
 
+  // 맵이 로드된 후 지도와 마커 관련 작업을 수행하는 useEffect
   useEffect(() => {
     if (isMapLoaded) {
-      const mapContainer = document.getElementById('map'); // 지도를 표시할 div
+      const mapContainer = document.getElementById('map');
       const mapOption = {
-        center: new window.kakao.maps.LatLng(currentCenter.lat, currentCenter.lng), // 현재 중심 좌표 사용
-        level: 3, // 확대 레벨
+        center: new window.kakao.maps.LatLng(center?.lat || 37.2838, center?.lng || 127.0454), // 전달받은 중심 좌표 설정, 없을 경우 아주대학교 좌표 사용
+        level: 5,
       };
-
-      // 지도 생성
       const createdMap = new window.kakao.maps.Map(mapContainer, mapOption);
-      setMap(createdMap); // 지도 객체 저장
+      setMap(createdMap);
 
-      // 지도의 중심이 변경될 때마다 새로운 좌표 저장
-      window.kakao.maps.event.addListener(createdMap, 'center_changed', function () {
-        const newCenter = createdMap.getCenter();
-        setCurrentCenter({
-          lat: newCenter.getLat(),
-          lng: newCenter.getLng(),
+      // 지도 클릭 시 마커 추가 기능
+      if (isSpotAdding) {
+        window.kakao.maps.event.addListener(createdMap, 'click', (mouseEvent) => {
+          const latlng = mouseEvent.latLng;
+          const newMarker = { lat: latlng.getLat(), lng: latlng.getLng() };
+          setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+
+          const marker = new window.kakao.maps.Marker({ position: latlng, map: createdMap });
+          window.kakao.maps.event.addListener(marker, 'click', () => {
+            marker.setMap(null);
+            setMarkers((prevMarkers) => prevMarkers.filter((m) => m.lat !== newMarker.lat || m.lng !== newMarker.lng));
+          });
+        });
+      }
+
+      // 기존 마커 추가
+      markers.forEach((marker) => {
+        const markerPosition = new window.kakao.maps.LatLng(marker.lat, marker.lng);
+        new window.kakao.maps.Marker({
+          map: createdMap,
+          position: markerPosition,
         });
       });
 
-      // 랜덤 색상 마커 생성 함수
-      const getRandomColorMarkerImage = () => {
-        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        
-        const markerImageSrc = `http://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png`; // 기본 마커 이미지
-        const imageSize = new window.kakao.maps.Size(24, 35); // 마커 이미지 크기
-        const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, imageSize);
+      // 경로 표시 - 마커가 두 개 이상일 때만 수행
+      if (markers.length > 1) {
+        for (let i = 0; i < markers.length - 1; i++) {
+          const start = markers[i];
+          const end = markers[i + 1];
+          getWalkingRouteFromTmap(start, end, createdMap);
+        }
+      }
+    }
+  }, [isMapLoaded, markers, isSpotAdding, center]);
 
-        return markerImage;
-      };
+  // Tmap API를 통해 도보 경로 데이터를 가져오는 함수
+  const getWalkingRouteFromTmap = (start, end, map) => {
+    const url = `https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json`;
 
-      // 마커 클릭 이벤트 추가 함수
-      const addMarker = (latlng) => {
-        const newMarker = new window.kakao.maps.Marker({
-          position: latlng,
-          image: getRandomColorMarkerImage(), // 랜덤 색상 마커
-        });
+    axios
+      .post(
+        url,
+        {
+          startX: start.lng,
+          startY: start.lat,
+          endX: end.lng,
+          endY: end.lat,
+          reqCoordType: 'WGS84GEO',
+          resCoordType: 'WGS84GEO',
+          startName: '출발지',
+          endName: '도착지',
+        },
+        {
+          headers: {
+            appKey: process.env.REACT_APP_TMAP_API_KEY,
+          },
+        }
+      )
+      .then((response) => {
+        const resultData = response.data.features;
+        const points = [];
 
-        // 새로운 마커를 지도에 표시
-        newMarker.setMap(createdMap);
-
-        // 마커 배열에 추가
-        setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
-
-        // 마커 삭제 이벤트 리스너 (클릭 시 삭제)
-        window.kakao.maps.event.addListener(newMarker, 'click', function () {
-          if (isSpotAdding) {
-            newMarker.setMap(null); // 마커를 지도에서 삭제
-            setMarkers((prevMarkers) => prevMarkers.filter(marker => marker !== newMarker)); // 상태에서도 제거
-          } else if (!isSpotAdding) {
-            console.log('Spot 추가 모드가 꺼져 있습니다. 마커를 삭제할 수 없습니다.');
+        resultData.forEach((feature) => {
+          if (feature.geometry.type === 'LineString') {
+            feature.geometry.coordinates.forEach((coordinate) => {
+              points.push(new window.kakao.maps.LatLng(coordinate[1], coordinate[0]));
+            });
           }
         });
-      };
 
-      // Spot 추가 모드가 켜졌을 때만 마커를 추가
-      const handleClick = (mouseEvent) => {
-        if (isSpotAdding) {
-          const latlng = mouseEvent.latLng; // 클릭한 위치의 위도, 경도
-          addMarker(latlng); // 마커 추가 함수 호출
-          console.log(latlng.getLat()); //위도 
-          console.log(latlng.getLng()); //경도
+        if (points.length > 0) {
+          const polyline = new window.kakao.maps.Polyline({
+            path: points,
+            strokeWeight: 5,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.7,
+            strokeStyle: 'solid',
+          });
+          polyline.setMap(map);
+        } else {
+          console.warn('Tmap에서 경로 데이터를 가져오지 못했습니다.');
         }
-      };
+      })
+      .catch((error) => {
+        console.error('Tmap 도보 경로 요청에 실패했습니다:', error);
+      });
+  };
 
-      // 지도 클릭 이벤트 추가
-      window.kakao.maps.event.addListener(createdMap, 'click', handleClick);
-
-      // 기존 마커 상태 복원 (Spot 추가 모드를 켜고 끌 때 마커가 남아 있도록)
-      markers.forEach(marker => marker.setMap(createdMap));
-
-      // 컴포넌트 언마운트 시 이벤트 리스너 제거 (마커는 유지)
-      return () => {
-        window.kakao.maps.event.removeListener(createdMap, 'click', handleClick);
-      };
-    }
-  }, [isMapLoaded, isSpotAdding, markers, currentCenter]); // markers 배열과 currentCenter 상태 의존성 추가
-
-  return <div id="map" style={{ width: '100%', height: '300px' }}></div>;
+  return <div id="map" style={{ width: '100%', height: '400px' }}></div>;
 };
 
 export default KakaoMap;
