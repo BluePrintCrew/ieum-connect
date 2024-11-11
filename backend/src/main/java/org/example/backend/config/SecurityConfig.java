@@ -15,7 +15,8 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/**").permitAll()  // API 엔드포인트에 대한 접근 허용
+                .requestMatchers("/api/**").permitAll()  // API 엔드포인트 허용
+                .requestMatchers("/", "/**").permitAll() // 모든 경로 허용  // API 엔드포인트에 대한 접근 허용
                 .anyRequest().authenticated()
                 .and()
                 .formLogin().disable()

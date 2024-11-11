@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 // JUnit 관련 imports
@@ -26,9 +27,11 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Spring Test 관련 imports
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -96,6 +99,8 @@ class StoryControllerTest {
         point.setRoutePointId(1L);
         point.setLatitude(new BigDecimal("37.5665"));
         point.setLongitude(new BigDecimal("126.9780"));
+        point.setRoadAddress("테스트 도로명1");
+        point.setAddress("테스트 지번명1");
         point.setOrderNum(1);
         point.setRoute(route);
         routePoints.add(point);
@@ -135,8 +140,8 @@ class StoryControllerTest {
 
         return story;
     }
-
     @Test
+    @WithMockUser(username = "testUser")
     @DisplayName("스토리 생성 성공 테스트")
     void createStory_Success() throws Exception {
         // Given
@@ -146,9 +151,31 @@ class StoryControllerTest {
         request.setPreference(1);
         request.setHashtags(List.of("tag1", "tag2"));
 
-        Story savedStory = createSampleStory();
-        when(storyService.createStory(any(User.class), anyString(), anyString(), anyInt(), anyList(),anyList(), anyList()))
-                .thenReturn(savedStory);
+        List<ResponseStoryDto.RoutePointDTO> routePoints = Arrays.asList(
+                new ResponseStoryDto.RoutePointDTO(),
+                new ResponseStoryDto.RoutePointDTO()
+        );
+        request.setRoutePoints(routePoints);
+
+        // 반환될 Story 객체는 request 데이터와 일치하게 생성
+        Story savedStory = new Story();
+        savedStory.setStoryId(1L);
+        savedStory.setTitle("New Story");  // request의 title과 일치
+        savedStory.setDescription("Test Memo");  // request의 memo와 일치
+        // ... 필요한 최소한의 데이터만 설정
+
+        // Mock 설정
+        when(storyService.createStory(
+                any(User.class),
+                eq(request.getTitle()),
+                eq(request.getMemo()),
+                eq(request.getPreference()),
+                eq(request.getHashtags()),
+                eq(request.getRoutePoints()),
+                anyList()
+        )).thenReturn(savedStory);
+        // Mock 설정 수정
+
 
         // 스토리 정보를 JSON으로 변환
         MockMultipartFile storyInfo = new MockMultipartFile(
@@ -157,16 +184,10 @@ class StoryControllerTest {
                 MediaType.APPLICATION_JSON_VALUE,
                 objectMapper.writeValueAsBytes(request));
 
-        // 테스트 이미지 파일 생성
+        // 테스트 이미지 파일들
         MockMultipartFile image1 = new MockMultipartFile(
                 "images",
                 "test1.jpg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "test image content".getBytes());
-
-        MockMultipartFile image2 = new MockMultipartFile(
-                "images",
-                "test2.jpg",
                 MediaType.IMAGE_JPEG_VALUE,
                 "test image content".getBytes());
 
@@ -174,13 +195,24 @@ class StoryControllerTest {
         mockMvc.perform(multipart("/api/stories")
                         .file(storyInfo)
                         .file(image1)
-                        .file(image2))
+                        .with(user("testUser"))  // 사용자 인증 정보 추가
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.savedStoryId").exists())
                 .andDo(print());
-    }
 
+        // 서비스 메소드 호출 검증
+        verify(storyService).createStory(
+                any(User.class),
+                eq("New Story"),
+                eq("Test Memo"),
+                eq(1),
+                anyList(),
+                anyList(),
+                anyList()
+        );
+    }
     @Test
     @DisplayName("이미지 없는 스토리 생성 실패 테스트")
     void createStory_NoImages_Failure() throws Exception {
@@ -227,6 +259,8 @@ class StoryControllerTest {
                 .andExpect(jsonPath("$.content[0].likeCount").value(10))
                 .andExpect(jsonPath("$.content[0].route.routePoints[0].latitude")
                         .value("37.5665"))
+                .andExpect(jsonPath("$.content[0].route.routePoints[0].address")
+                        .value("테스트 지번명1"))
                 .andDo(print());
     }
     @Test

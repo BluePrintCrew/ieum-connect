@@ -268,7 +268,7 @@ public class StoryController {
         routeDTO.setName(story.getRoute().getName());
 
         List<StoryDTO.RoutePointDTO> routePointDTOs = story.getRoute().getRoutePoints().stream()
-                .map(rp -> new StoryDTO.RoutePointDTO(rp.getRoutePointId(), rp.getLatitude(), rp.getLongitude(), rp.getOrderNum()))
+                .map(rp -> new StoryDTO.RoutePointDTO(rp.getRoutePointId(), rp.getLatitude(), rp.getLongitude(), rp.getOrderNum(), rp.getAddress(), rp.getRoadAddress()))
                 .collect(Collectors.toList());
         routeDTO.setRoutePoints(routePointDTOs);
 
@@ -309,7 +309,7 @@ public class StoryController {
 
             // 해당 루트에 연관되는 routePotnt들을 반환받아 이를 DTO 배열로 설정
             List<StoryDTO.RoutePointDTO> routePointDTOs = story.getRoute().getRoutePoints().stream()
-                    .map(rp -> new StoryDTO.RoutePointDTO(rp.getRoutePointId(), rp.getLatitude(), rp.getLongitude(), rp.getOrderNum()))
+                    .map(rp -> new StoryDTO.RoutePointDTO(rp.getRoutePointId(), rp.getLatitude(), rp.getLongitude(), rp.getOrderNum(), rp.getAddress(), rp.getRoadAddress()))
                     .collect(Collectors.toList());
             routeDTO.setRoutePoints(routePointDTOs);
 

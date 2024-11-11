@@ -13,8 +13,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @OpenAPIDefinition(
         info = @Info(title = "IEUM 추억의 경로 기록 어플",
-                description = "특정 카테고리 순 조회 업데이트 API",
-                version = "v2"))
+                description = "사진이 아닌 점으로 생성, 주소 포함 조회",
+                version = "v3"))
 @RequiredArgsConstructor
 @Configuration
 public class SwaggerConfig {

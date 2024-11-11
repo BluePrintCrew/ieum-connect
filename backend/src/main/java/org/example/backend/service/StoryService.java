@@ -4,6 +4,8 @@ import org.apache.commons.imaging.ImageReadException;
 import org.example.backend.domain.*;
 import org.example.backend.dto.PhotoInfoDTO;
 import org.example.backend.dto.ResponseStoryDto;
+import org.example.backend.kakaosearch.kakaoadress.AddressResponse;
+import org.example.backend.kakaosearch.kakaoadress.KakaoAddressService;
 import org.example.backend.repository.*;
 
 import org.springframework.data.domain.Page;
@@ -29,17 +31,18 @@ public class StoryService {
     private final PhotoRepository photoRepository;
     private final HashtagRepository hashtagRepository;
     private final PhotoService photoService;
+    private final KakaoAddressService kakaoAddressService; // 주소 생성
 
     public StoryService(StoryRepository storyRepository, RouteRepository routeRepository,
                         RoutePointRepository routePointRepository, PhotoRepository photoRepository,
-                        HashtagRepository hashtagRepository, PhotoService photoService) {
+                        HashtagRepository hashtagRepository, PhotoService photoService,KakaoAddressService kakaoAddressService) {
         this.storyRepository = storyRepository;
         this.routeRepository = routeRepository;
         this.routePointRepository = routePointRepository;
         this.photoRepository = photoRepository;
         this.hashtagRepository = hashtagRepository;
         this.photoService = photoService;
-
+        this.kakaoAddressService = kakaoAddressService;
     }
 
     @Transactional
@@ -112,9 +115,12 @@ public class StoryService {
         List<RoutePoint> routePoints = new ArrayList<>();
         for (ResponseStoryDto.RoutePointDTO routePointDTO : routePointDTOS) {
             RoutePoint routePoint = new RoutePoint();
+            AddressResponse addressResponse = kakaoAddressService.coordToAddress(routePointDTO.getLatitude().doubleValue(), routePointDTO.getLongitude().doubleValue());
             routePoint.setLatitude(routePointDTO.getLatitude());
             routePoint.setLongitude(routePointDTO.getLongitude());
             routePoint.setOrderNum(routePointDTO.getOrderNum());
+            routePoint.setAddress(addressResponse.getAddress());
+            routePoint.setRoadAddress(addressResponse.getRoadAddress());
             routePoint.setRoute(route);
             routePoints.add(routePoint);
         }

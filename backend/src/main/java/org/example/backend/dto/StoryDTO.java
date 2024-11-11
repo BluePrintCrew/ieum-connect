@@ -62,6 +62,8 @@ public class StoryDTO {
         private BigDecimal latitude;
         private BigDecimal longitude;
         private Integer orderNum;
+        private String address;       // 지번 주소
+        private String roadAddress;   // 도로명 주소
     }
 
     @Getter
