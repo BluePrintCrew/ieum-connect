@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.backend.domain.Story;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,7 +20,7 @@ public class StoryDTO {
         private String title;
         private String description;
         private LocalDateTime createdAt;
-        private String visibility;
+        private Story.Visibility visibility;
         private UserDTO user;
         private RouteDTO route;
         private List<PhotoDTO> photos;

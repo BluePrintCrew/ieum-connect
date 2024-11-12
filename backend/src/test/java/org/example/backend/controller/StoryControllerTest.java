@@ -149,6 +149,7 @@ class StoryControllerTest {
         request.setTitle("New Story");
         request.setMemo("Test Memo");
         request.setPreference(1);
+        request.setVisibility(Story.Visibility.PUBLIC);
         request.setHashtags(List.of("tag1", "tag2"));
 
         List<ResponseStoryDto.RoutePointDTO> routePoints = Arrays.asList(
@@ -170,6 +171,7 @@ class StoryControllerTest {
                 eq(request.getTitle()),
                 eq(request.getMemo()),
                 eq(request.getPreference()),
+                eq(request.getVisibility()),
                 eq(request.getHashtags()),
                 eq(request.getRoutePoints()),
                 anyList()
@@ -208,6 +210,7 @@ class StoryControllerTest {
                 eq("New Story"),
                 eq("Test Memo"),
                 eq(1),
+                eq(Story.Visibility.PUBLIC),
                 anyList(),
                 anyList(),
                 anyList()

@@ -18,6 +18,7 @@ public class ResponseStoryDto {
         private String title;
         private String memo;
         private int preference;
+        private Story.Visibility visibility;
         private List<String> hashtags;
         private List<RoutePointDTO> routePoints;
 

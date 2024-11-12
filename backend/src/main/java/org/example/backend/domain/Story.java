@@ -59,6 +59,7 @@ public class Story {
     @OneToMany(mappedBy = "story", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 
+    private int preference;
 
     // Getters and setters
     // ...

@@ -52,7 +52,7 @@ public class StoryService {
 
     @Transactional(readOnly = true)
     public Page<Story> getStoriesByLikes(Pageable pageable) {
-        return storyRepository.findAllByOrderByLikeCountDesc(pageable);
+        return storyRepository.findByVisibilityOrderByLikeCountDesc(Story.Visibility.PUBLIC,pageable);
     }
 
     @Transactional
@@ -63,17 +63,17 @@ public class StoryService {
 
     @Transactional
     public Page<Story> findStoriesByHashtag(String hashtagName, Pageable pageable){
-        return storyRepository.findByRouteHashtagsNameContainingIgnoreCase(hashtagName,pageable);
+        return storyRepository.findByRouteHashtagsNameContainingIgnoreCaseAndVisibility(hashtagName,Story.Visibility.PUBLIC,pageable);
     }
     // 선호도 추가는 추후에 진행
     @Transactional
-    public Story createStory(User user, String title, String memo, int preference, List<String> hashtags, List<ResponseStoryDto.RoutePointDTO> routePointDTOS, List<MultipartFile> images) throws IOException {
+    public Story createStory(User user, String title, String memo, int preference,Story.Visibility visibility, List<String> hashtags, List<ResponseStoryDto.RoutePointDTO> routePointDTOS, List<MultipartFile> images) throws IOException {
         Story story = new Story();
         story.setUser(user);
         story.setTitle(title);
         story.setDescription(memo);
-        story.setVisibility(Story.Visibility.PRIVATE); // default를 private로 일단 두는게 좋을 것 같다.
-
+        story.setVisibility(visibility); // default를 private로 일단 두는게 좋을 것 같다.
+        story.setPreference(preference);
         Route route = new Route();
         route.setName(title);
         route.setStory(story);
@@ -94,7 +94,7 @@ public class StoryService {
 
     @Transactional(readOnly = true)
     public Page<Story> getStoriesByTime(Pageable pageable) {
-        return storyRepository.findAllByOrderByCreatedAtDesc(pageable);
+        return storyRepository.findByVisibilityOrderByCreatedAtDesc(Story.Visibility.PUBLIC,pageable);
     }
 
     @Transactional

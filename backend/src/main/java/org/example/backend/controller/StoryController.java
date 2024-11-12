@@ -51,7 +51,7 @@ public class StoryController {
             tempUser.setUserId(1L);
 
             Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
-                    request.getPreference(), request.getHashtags(),request.getRoutePoints(), images);
+                    request.getPreference(), request.getVisibility(),request.getHashtags(),request.getRoutePoints(), images);
 
             ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
             response.setStatus("success");
@@ -213,7 +213,7 @@ public class StoryController {
         }
     }
 
-    // ... (기존 코드 유지)
+
 
     @GetMapping("/top")
     @Operation(summary = "좋아요 순으로 스토리 조회",
@@ -254,7 +254,7 @@ public class StoryController {
         dto.setTitle(story.getTitle());
         dto.setDescription(story.getDescription());
         dto.setCreatedAt(story.getCreatedAt());
-        dto.setVisibility(story.getVisibility().toString());
+        dto.setVisibility(story.getVisibility());
 
         // Set user information
         StoryDTO.UserDTO userDTO = new StoryDTO.UserDTO();
@@ -294,7 +294,7 @@ public class StoryController {
             dto.setTitle(story.getTitle());
             dto.setDescription(story.getDescription());
             dto.setCreatedAt(story.getCreatedAt());
-            dto.setVisibility(story.getVisibility().toString());
+            dto.setVisibility(story.getVisibility());
 
             // User 정보 설정
             StoryDTO.UserDTO userDTO = new StoryDTO.UserDTO();
@@ -349,8 +349,7 @@ public class StoryController {
         }
     public enum StorySortField {
         CREATED_AT("createdAt"),
-        TITLE("title"),
-        LIKES("likeCount");  // 좋아요 수가 있다면
+        LIKES("likeCount");
 
 
         private final String fieldName;
