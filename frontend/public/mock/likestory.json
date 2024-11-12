@@ -1,0 +1,180 @@
+
+  [
+    {
+      "storyId": 4,
+      "title": "산과 바다의 조화",
+      "description": "산과 바다가 어우러진 아름다운 풍경을 담았습니다.",
+      "createdAt": "2024-10-19T10:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 2,
+        "username": "사용자2"
+      },
+      "route": {
+        "routeId": 4,
+        "name": "산과 바다 경로",
+        "routePoints": [
+          {
+            "routePointId": 4,
+            "latitude": 36.550000,
+            "longitude": 127.000000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 4,
+          "filePath": "/images/image4.jpeg",
+          "takenAt": "2024-10-19T11:00:00",
+          "latitude": 36.550000,
+          "longitude": 127.000000
+        }
+      ],
+      "hashtags": ["#산", "#바다", "#풍경"],
+      "photoCount": 1,
+      "likes": 150,
+      "comments": [
+        {
+          "commentId": 4,
+          "username": "댓글작성자4",
+          "content": "정말 아름다운 풍경입니다!",
+          "createdAt": "2024-10-19T12:00:00"
+        }
+      ],
+      "preference": 3
+    },
+    {
+      "storyId": 5,
+      "title": "자연과 함께하는 힐링",
+      "description": "자연 속에서 힐링하며 여유를 즐긴 이야기입니다.",
+      "createdAt": "2024-10-18T09:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 3,
+        "username": "사용자3"
+      },
+      "route": {
+        "routeId": 5,
+        "name": "자연 힐링 경로",
+        "routePoints": [
+          {
+            "routePointId": 5,
+            "latitude": 37.400000,
+            "longitude": 127.020000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 5,
+          "filePath": "/images/image5.jpeg",
+          "takenAt": "2024-10-18T10:00:00",
+          "latitude": 37.400000,
+          "longitude": 127.020000
+        }
+      ],
+      "hashtags": ["#자연", "#힐링", "#여유"],
+      "photoCount": 1,
+      "likes": 120,
+      "comments": [
+        {
+          "commentId": 5,
+          "username": "댓글작성자5",
+          "content": "정말 힐링되네요!",
+          "createdAt": "2024-10-18T11:00:00"
+        }
+      ],
+      "preference": 2
+    },
+    {
+      "storyId": 6,
+      "title": "봄꽃 구경",
+      "description": "봄이 찾아오면서 만개한 꽃들을 구경하며 기록한 이야기입니다.",
+      "createdAt": "2024-10-15T14:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 4,
+        "username": "사용자4"
+      },
+      "route": {
+        "routeId": 6,
+        "name": "봄꽃 구경 경로",
+        "routePoints": [
+          {
+            "routePointId": 6,
+            "latitude": 37.520000,
+            "longitude": 126.980000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 6,
+          "filePath": "/images/image6.jpeg",
+          "takenAt": "2024-10-15T15:00:00",
+          "latitude": 37.520000,
+          "longitude": 126.980000
+        }
+      ],
+      "hashtags": ["#봄꽃", "#자연", "#구경"],
+      "photoCount": 1,
+      "likes": 85,
+      "comments": [
+        {
+          "commentId": 6,
+          "username": "댓글작성자6",
+          "content": "꽃이 정말 예쁘네요!",
+          "createdAt": "2024-10-15T16:00:00"
+        }
+      ],
+      "preference": 1
+    },
+    {
+      "storyId": 7,
+      "title": "겨울 산책길",
+      "description": "눈 덮인 겨울 산책길을 걸으며 찍은 사진을 담았습니다.",
+      "createdAt": "2024-10-10T09:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 5,
+        "username": "사용자5"
+      },
+      "route": {
+        "routeId": 7,
+        "name": "겨울 산책 경로",
+        "routePoints": [
+          {
+            "routePointId": 7,
+            "latitude": 37.570000,
+            "longitude": 126.950000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 7,
+          "filePath": "/images/image7.jpeg",
+          "takenAt": "2024-10-10T10:00:00",
+          "latitude": 37.570000,
+          "longitude": 126.950000
+        }
+      ],
+      "hashtags": ["#겨울", "#눈", "#산책"],
+      "photoCount": 1,
+      "likes": 95,
+      "comments": [
+        {
+          "commentId": 7,
+          "username": "댓글작성자7",
+          "content": "정말 겨울 분위기가 물씬 느껴지네요!",
+          "createdAt": "2024-10-10T11:00:00"
+        }
+      ],
+      "preference": 2
+    }
+  ]
+  

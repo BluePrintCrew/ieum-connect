@@ -1,0 +1,136 @@
+
+[
+    {
+      "storyId": 10,
+      "title": "감성적인 카페 투어",
+      "description": "도심의 다양한 감성 카페를 방문하며 기록한 이야기입니다.",
+      "createdAt": "2024-10-30T14:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 1,
+        "username": "사용자1"
+      },
+      "route": {
+        "routeId": 10,
+        "name": "카페 투어 경로",
+        "routePoints": [
+          {
+            "routePointId": 10,
+            "latitude": 37.550000,
+            "longitude": 126.980000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 10,
+          "filePath": "/images/image10.jpeg",
+          "takenAt": "2024-10-30T14:30:00",
+          "latitude": 37.550000,
+          "longitude": 126.980000
+        }
+      ],
+      "hashtags": ["#카페", "#도심", "#감성"],
+      "photoCount": 1,
+      "likes": 50,
+      "comments": [
+        {
+          "commentId": 10,
+          "username": "댓글작성자1",
+          "content": "정말 분위기 있는 카페네요!",
+          "createdAt": "2024-10-30T15:00:00"
+        }
+      ],
+      "preference": 2
+    },
+    {
+      "storyId": 11,
+      "title": "산속의 힐링 여행",
+      "description": "자연 속에서 힐링하며 느낀 평화를 담았습니다.",
+      "createdAt": "2024-10-25T10:00:00",
+      "visibility": "FRIENDS_ONLY",
+      "user": {
+        "userId": 1,
+        "username": "사용자1"
+      },
+      "route": {
+        "routeId": 11,
+        "name": "산속 여행 경로",
+        "routePoints": [
+          {
+            "routePointId": 11,
+            "latitude": 37.600000,
+            "longitude": 127.000000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 11,
+          "filePath": "/images/image11.jpeg",
+          "takenAt": "2024-10-25T11:00:00",
+          "latitude": 37.600000,
+          "longitude": 127.000000
+        }
+      ],
+      "hashtags": ["#자연", "#힐링", "#여행"],
+      "photoCount": 1,
+      "likes": 80,
+      "comments": [
+        {
+          "commentId": 11,
+          "username": "댓글작성자2",
+          "content": "정말 멋진 자연경관이네요!",
+          "createdAt": "2024-10-25T12:00:00"
+        }
+      ],
+      "preference": 3
+    },
+    {
+      "storyId": 12,
+      "title": "밤하늘 별 구경",
+      "description": "도심을 벗어나 하늘 가득한 별을 바라본 순간들입니다.",
+      "createdAt": "2024-10-20T21:00:00",
+      "visibility": "PRIVATE",
+      "user": {
+        "userId": 1,
+        "username": "사용자1"
+      },
+      "route": {
+        "routeId": 12,
+        "name": "별 구경 경로",
+        "routePoints": [
+          {
+            "routePointId": 12,
+            "latitude": 37.500000,
+            "longitude": 126.900000,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 12,
+          "filePath": "/images/image12.jpeg",
+          "takenAt": "2024-10-20T22:00:00",
+          "latitude": 37.500000,
+          "longitude": 126.900000
+        }
+      ],
+      "hashtags": ["#별", "#밤하늘", "#평화"],
+      "photoCount": 1,
+      "likes": 30,
+      "comments": [
+        {
+          "commentId": 12,
+          "username": "댓글작성자3",
+          "content": "별이 정말 아름답네요!",
+          "createdAt": "2024-10-20T23:00:00"
+        }
+      ],
+      "preference": 1
+    }
+  ]
+  

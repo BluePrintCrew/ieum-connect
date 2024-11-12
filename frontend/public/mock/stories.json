@@ -1,0 +1,172 @@
+[
+    {
+      "storyId": 1,
+      "title": "행복한 여행",
+      "description": "행복한 여행을 떠나며 즐거웠던 순간들을 기록했습니다.",
+      "createdAt": "2024-10-29T10:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 1,
+        "username": "사용자1"
+      },
+      "route": {
+        "routeId": 1,
+        "name": "행복한 여행 경로",
+        "routePoints": [
+          {
+            "routePointId": 1,
+            "latitude": 37.564991,
+            "longitude": 126.983937,
+            "orderNum": 1
+          },
+          {
+            "routePointId": 2,
+            "latitude": 37.566158,
+            "longitude": 126.988940,
+            "orderNum": 2
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 1,
+          "filePath": "/images/image1.jpeg",
+          "takenAt": "2024-10-29T10:00:00",
+          "latitude": 37.564991,
+          "longitude": 126.983937
+        },
+        {
+          "photoId": 2,
+          "filePath": "/images/image2.jpeg",
+          "takenAt": "2024-10-29T10:30:00",
+          "latitude": 37.566158,
+          "longitude": 126.988940
+        }
+      ],
+      "hashtags": ["#여행", "#행복", "#기록"],
+      "photoCount": 2,
+      "likeCount": 120,
+      "comments": [
+        {
+          "commentId": 1,
+          "username": "댓글작성자1",
+          "content": "정말 즐거워 보이네요!",
+          "createdAt": "2024-10-29T12:00:00"
+        },
+        {
+          "commentId": 2,
+          "username": "댓글작성자2",
+          "content": "사진이 멋져요!",
+          "createdAt": "2024-10-29T12:15:00"
+        }
+      ],
+      "preference": 3
+    },
+    {
+      "storyId": 2,
+      "title": "맛있는 음식 여행",
+      "description": "맛있는 음식을 먹으며 보낸 즐거운 여행의 기록입니다.",
+      "createdAt": "2024-10-28T12:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 2,
+        "username": "사용자2"
+      },
+      "route": {
+        "routeId": 2,
+        "name": "맛집 탐방 경로",
+        "routePoints": [
+          {
+            "routePointId": 1,
+            "latitude": 37.570991,
+            "longitude": 126.982937,
+            "orderNum": 1
+          },
+          {
+            "routePointId": 2,
+            "latitude": 37.572158,
+            "longitude": 126.989940,
+            "orderNum": 2
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 3,
+          "filePath": "/images/image3.jpeg",
+          "takenAt": "2024-10-28T12:30:00",
+          "latitude": 37.570991,
+          "longitude": 126.982937
+        },
+        {
+          "photoId": 4,
+          "filePath": "/images/image1.jpeg",
+          "takenAt": "2024-10-28T13:00:00",
+          "latitude": 37.572158,
+          "longitude": 126.989940
+        }
+      ],
+      "hashtags": ["#맛집", "#음식여행", "#행복"],
+      "photoCount": 2,
+      "likeCount": 98,
+      "comments": [
+        {
+          "commentId": 3,
+          "username": "댓글작성자3",
+          "content": "음식이 너무 맛있어 보여요!",
+          "createdAt": "2024-10-28T13:30:00"
+        },
+        {
+          "commentId": 4,
+          "username": "댓글작성자4",
+          "content": "여행 가고 싶네요!",
+          "createdAt": "2024-10-28T14:00:00"
+        }
+      ],
+      "preference": 2
+    },
+    {
+      "storyId": 3,
+      "title": "도시 탐방",
+      "description": "도시 곳곳을 탐방하며 기록한 소중한 순간들입니다.",
+      "createdAt": "2024-10-27T15:00:00",
+      "visibility": "PUBLIC",
+      "user": {
+        "userId": 3,
+        "username": "사용자3"
+      },
+      "route": {
+        "routeId": 3,
+        "name": "도시 탐방 경로",
+        "routePoints": [
+          {
+            "routePointId": 1,
+            "latitude": 37.567991,
+            "longitude": 126.981937,
+            "orderNum": 1
+          }
+        ]
+      },
+      "photos": [
+        {
+          "photoId": 5,
+          "filePath": "/images/image2.jpeg",
+          "takenAt": "2024-10-27T15:00:00",
+          "latitude": 37.567991,
+          "longitude": 126.981937
+        }
+      ],
+      "hashtags": ["#도시탐방", "#산책", "#기록"],
+      "photoCount": 1,
+      "likeCount": 75,
+      "comments": [
+        {
+          "commentId": 5,
+          "username": "댓글작성자5",
+          "content": "도시 구경 너무 좋아요!",
+          "createdAt": "2024-10-27T16:00:00"
+        }
+      ],
+      "preference": 1
+    }
+]

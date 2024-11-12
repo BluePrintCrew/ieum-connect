@@ -1,250 +1,343 @@
-import React, { useState } from 'react';
-import KakaoMap from '../Kakao/KakaoMap'; // KakaoMap 컴포넌트 불러오기
-import { extractExifData } from '../function/exif'; // EXIF 데이터 추출 함수 불러오기
-import { getAddressFromCoords } from '../function/kakaoGeocoder'; // 좌표로 주소를 변환하는 함수
+import React, { useState, useEffect, useRef } from 'react';
+import KakaoMap from '../Kakao/KakaoMap';
+import { extractExifData } from '../function/exif';
+import { getAddressFromCoords } from '../function/kakaoGeocoder';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import '../storyrecord.css';
+import { useNavigate } from 'react-router-dom';
+import FooterNav from './Footernav';
+import axios from 'axios';
+import * as tf from '@tensorflow/tfjs';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
 const StoryRecord = () => {
   const [title, setTitle] = useState('');
   const [memo, setMemo] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [preference, setPreference] = useState(0); // 기본 선호도 0단계
+  const [preference, setPreference] = useState(0);
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState([]);
-  const [isSpotAdding, setIsSpotAdding] = useState(false); // 마커 추가 활성화 여부
-  const [markers, setMarkers] = useState([]); // 지도에 추가된 마커 저장
-  const [addresses, setAddresses] = useState([]); // 주소 정보 저장
+  const [recommendedKeywords, setRecommendedKeywords] = useState([]);
+  const [isSpotAdding, setIsSpotAdding] = useState(false);
+  const [markers, setMarkers] = useState([]);
+  const [addresses, setAddresses] = useState([]);
+  const [isDroppableLoaded, setIsDroppableLoaded] = useState(false);
+  const [model, setModel] = useState(null);
+  const navigate = useNavigate();
+  const isUpdatingKeywords = useRef(false);
+  const detectedLabelsSet = useRef(new Set());
 
-  // 파일 선택 처리 (JPEG 파일만 허용)
+  useEffect(() => {
+    const loadModel = async () => {
+      const loadedModel = await cocoSsd.load();
+      setModel(loadedModel);
+    };
+    loadModel();
+  }, []);
+
+  useEffect(() => {
+    if (markers.length > 0) {
+      setIsDroppableLoaded(true);
+    }
+  }, [markers]);
+
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    const validFiles = files.filter((file) => file.type === 'image/jpeg');
+    const files = Array.from(e.target.files).filter((file) => file.type === 'image/jpeg');
+    if (files.length > 0) {
+      setSelectedFiles([...selectedFiles, ...files]);
+      setImagePreviews([...imagePreviews, ...files.map((file) => URL.createObjectURL(file))]);
+      files.forEach((file) => extractExifData(file, addMarkerFromExif));
+      files.forEach((file) => detectObjectsInImage(file));
+    }
+  };
 
-    if (validFiles.length > 0) {
-      setSelectedFiles([...selectedFiles, ...validFiles]);
-      const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
-      setImagePreviews([...imagePreviews, ...newPreviews]);
-
-      // EXIF 데이터에서 GPS 정보 추출 및 마커 추가
-      validFiles.forEach((file) => {
-        // EXIF 데이터 추출
-        extractExifData(file, (data) => {
-          if (data && data.latitude && data.longitude) {
-            const { latitude, longitude, dateTime } = data;
-
-            // 좌표로 주소 검색 후 마커 추가
-            getAddressFromCoords(latitude, longitude, (address) => {
-              const newMarker = { lat: latitude, lng: longitude, date: dateTime, address };
-              setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
-              setAddresses((prevAddresses) => [...prevAddresses, address]);
-
-              console.log('추가된 마커:', newMarker);
-            });
-          } else {
-            console.log('GPS 정보가 없는 사진입니다.');
-          }
-        });
+  const addMarkerFromExif = (data) => {
+    if (data && data.latitude && data.longitude) {
+      getAddressFromCoords(data.latitude, data.longitude, (address) => {
+        const newMarker = { lat: data.latitude, lng: data.longitude, date: data.dateTime, address };
+        setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+        setAddresses((prevAddresses) => [...prevAddresses, address]);
       });
     }
   };
 
-  // 제목 입력 핸들러
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
+  // 이미지에서 객체를 감지하는 함수
+  const detectObjectsInImage = async (file) => {
+    if (!model) {
+      console.error('모델이 아직 로드되지 않았습니다.');
+      return;
+    }
+
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = async () => {
+      try {
+        let predictions = await model.detect(img);
+        if (predictions.length === 0) {
+          // 객체가 없는 경우 ChatGPT API를 사용하여 키워드 추천
+          console.log('객체가 없음: 배경 이미지로 간주하여 ChatGPT에 요청합니다.');
+          await recommendKeywordsFromChatGPT(file);
+        } else {
+          predictions = predictions.slice(0, 2); // 최대 2개의 객체만 탐지
+          const newLabels = predictions
+            .map((prediction) => prediction.class)
+            .filter((label) => !detectedLabelsSet.current.has(label));
+
+          newLabels.forEach((label) => detectedLabelsSet.current.add(label));
+
+          console.log("감지된 객체:", newLabels);
+
+          // ChatGPT API를 이용해 추가적인 키워드 추천
+          for (const label of newLabels) {
+            await recommendKeywordsFromLabel(label);
+          }
+        }
+      } catch (error) {
+        console.error('객체 감지 중 오류 발생:', error);
+      }
+    };
   };
 
-  // 메모 입력 핸들러
-  const handleMemoChange = (e) => {
-    setMemo(e.target.value);
+  // ChatGPT API를 사용하여 객체 라벨 기반 키워드 추천
+  const recommendKeywordsFromLabel = async (label) => {
+    if (isUpdatingKeywords.current) return;
+    isUpdatingKeywords.current = true;
+
+    try {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'user',
+              content: `
+              "당신은 재미있고 유행하는 키워드를 추천하는 어시스턴트입니다. 사용자가 이미지에서 특정 객체를 감지하면, 해당 객체 '${label}'와 관련된 한국어 해시태그 키워드 3개를 추천합니다. 예를 들어, '케이크'를 감지하면 '카페', '케이크맛집', '데이트장소'와 같은 사람들이 자주 사용하는 재미있고 유용한 단어를 제공합니다. 각 단어는 쉼표로 구분하여 한 줄로 작성하세요."
+              `
+            }
+          ],
+          max_tokens: 50,
+          n: 1,
+          stop: null,
+          temperature: 0.7,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.REACT_APP_CHATGPT_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const chatGPTKeywords = response.data.choices[0].message.content
+        .split(',')
+        .map((kw) => kw.trim().replace(/^#+/, '')) // 모든 기존 해시태그 제거
+        .filter((kw) => kw !== '' && kw !== '"'); // 빈 문자열 및 따옴표 제거
+      
+      setRecommendedKeywords((prevKeywords) => [...prevKeywords, ...chatGPTKeywords]);
+    } catch (error) {
+      console.error('키워드 추천 중 오류 발생:', error);
+    } finally {
+      isUpdatingKeywords.current = false;
+    }
   };
 
-  // 선호도 설정 (1단계, 2단계, 3단계 하트 선택)
-  const handlePreferenceChange = (newPreference) => {
-    setPreference(newPreference);
+  // ChatGPT API를 사용하여 배경 이미지 기반 키워드 추천
+  const recommendKeywordsFromChatGPT = async (file) => {
+    if (isUpdatingKeywords.current) return;
+    isUpdatingKeywords.current = true;
+
+    try {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'user',
+              content: `
+              "이미지에서 감지된 객체가 없는 경우, 사용자가 제공한 배경 이미지에 대해 한국어로 적절한 해시태그 키워드 3개를 추천합니다. 예를 들어, 자연 풍경 이미지를 보면 '힐링', '자연여행', '풍경사진'과 같은 사람들이 자주 사용하는 단어를 제공합니다. 각 단어는 쉼표로 구분하여 한 줄로 작성하세요."
+              `
+            }
+          ],
+          max_tokens: 50,
+          n: 1,
+          stop: null,
+          temperature: 0.7,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.REACT_APP_CHATGPT_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const chatGPTKeywords = response.data.choices[0].message.content
+        .split(',')
+        .map((kw) => kw.trim().replace(/^#+/, '')) // 모든 기존 해시태그 제거
+        .filter((kw) => kw !== '' && kw !== '"' && kw !== '\''); // 빈 문자열 및 따옴표 제거
+      
+      setRecommendedKeywords((prevKeywords) => [...prevKeywords, ...chatGPTKeywords]);
+    } catch (error) {
+      console.error('배경 이미지 키워드 추천 중 오류 발생:', error);
+    } finally {
+      isUpdatingKeywords.current = false;
+    }
   };
 
-  // 해시태그 추가 핸들러
-  const handleHashtagChange = (e) => {
-    setHashtagInput(e.target.value);
-  };
+  const handleTitleChange = (e) => setTitle(e.target.value);
+  const handleMemoChange = (e) => setMemo(e.target.value);
+  const handlePreferenceChange = (newPreference) => setPreference(newPreference);
+  const handleHashtagChange = (e) => setHashtagInput(e.target.value);
 
   const handleHashtagKeyPress = (e) => {
     if (e.key === 'Enter' && hashtagInput.trim() !== '') {
       setHashtags([...hashtags, hashtagInput.trim()]);
-      setHashtagInput(''); // 입력 필드 초기화
+      setHashtagInput('');
     }
   };
 
-  const removeHashtag = (indexToRemove) => {
-    setHashtags(hashtags.filter((_, index) => index !== indexToRemove));
+  const addRecommendedKeyword = (keyword) => {
+    const cleanedKeyword = keyword.replace(/^#+/, '').trim();
+    const formattedKeyword = `${cleanedKeyword}`;
+  
+    if (!hashtags.includes(formattedKeyword)) {
+      setHashtags([...hashtags, formattedKeyword]);
+    }
   };
-
-  // Spot 추가 핸들러
-  const toggleSpotAdding = () => {
-    setIsSpotAdding(!isSpotAdding); // Spot 추가 모드를 토글
-  };
+  
+  const removeHashtag = (indexToRemove) => setHashtags(hashtags.filter((_, index) => index !== indexToRemove));
+  const toggleSpotAdding = () => setIsSpotAdding(!isSpotAdding);
 
   const handleSubmit = () => {
-    console.log('제목:', title);
-    console.log('사진:', selectedFiles);
-    console.log('메모:', memo);
-    console.log('만족도:', preference);
-    console.log('해시태그:', hashtags);
-    console.log('저장된 마커들:', markers);
-    console.log('추가된 주소들:', addresses);
-    // 여기에 제출 로직 추가
+    console.log({ title, selectedFiles, memo, preference, hashtags, markers, addresses });
+  };
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const updatedMarkers = Array.from(markers);
+    const [reorderedMarker] = updatedMarkers.splice(result.source.index, 1);
+    updatedMarkers.splice(result.destination.index, 0, reorderedMarker);
+    setMarkers(updatedMarkers);
   };
 
   return (
-    <div>
-      <h1>스토리 기록하기</h1>
-
-      {/* 제목 입력 필드 */}
+    <div className="storyrecord-container">
+      <h1 className="storyrecord-title">스토리 기록하기</h1>
       <input
         type="text"
         placeholder="제목을 입력하세요"
         value={title}
         onChange={handleTitleChange}
-        style={{ width: '100%', padding: '10px', marginBottom: '20px' }}
+        className="title-input"
       />
-
-      {/* 카카오 지도 추가 (Spot 추가 여부 및 마커 전달) */}
-      <div
-        style={{
-          border: isSpotAdding ? '3px solid blue' : '1px solid gray', // Spot 추가 모드에 따라 테두리 변경
-          opacity: isSpotAdding ? 0.8 : 1, // Spot 추가 모드 시 지도 약간 투명하게
-        }}
-      >
-        <KakaoMap isSpotAdding={isSpotAdding} markers={markers} />
+      <div className={`map-container ${isSpotAdding ? 'spot-adding' : ''}`}>
+        <KakaoMap isSpotAdding={isSpotAdding} markers={markers} setMarkers={setMarkers} />
       </div>
-
-      {/* Spot 추가 모드 알림 */}
       {isSpotAdding && (
-        <div style={{ color: 'pink', marginTop: '10px' }}>
-          Spot 추가 모드가 활성화되었습니다. 지도를 클릭하여 Spot을 추가하세요.
-        </div>
+        <div className="spot-adding-notice">Spot 추가 모드가 활성화되었습니다. 지도를 클릭하여 Spot을 추가하세요.</div>
       )}
-
-      {/* Spot 추가 버튼 */}
-      <button
-        onClick={toggleSpotAdding}
-        style={{
-          marginTop: '10px',
-          padding: '10px 20px',
-          backgroundColor: isSpotAdding ? 'red' : 'blue',
-          color: 'white',
-        }}
-      >
+      <button onClick={toggleSpotAdding} className={`toggle-spot-button ${isSpotAdding ? 'active' : ''}`}>
         {isSpotAdding ? 'Spot 추가 모드 끄기' : 'Spot 추가 모드 켜기'}
       </button>
-
-      {/* 사진 미리보기 및 등록 */}
-      <div>
-       <h3> </h3> 
-      
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-          {imagePreviews.map((preview, index) => (
-            <img
-              key={index}
-              src={preview}
-              alt={`썸네일 ${index + 1}`}
-              style={{ width: '50px', height: '50px', marginRight: '10px' }}
-            />
-          ))}
-          <input
-            type="file"
-            accept="image/jpeg"
-            multiple
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-            id="fileUpload"
-          />
-          <label htmlFor="fileUpload" style={{ cursor: 'pointer', padding: '10px', border: '1px solid gray' }}>
-            +
-          </label>
-        </div>
+      <div className="image-preview-container">
+        {imagePreviews.map((preview, index) => (
+          <img key={index} src={preview} alt={`썸네일 ${index + 1}`} className="image-preview" />
+        ))}
+        <input
+          type="file"
+          accept="image/jpeg"
+          multiple
+          onChange={handleFileChange}
+          id="fileUpload"
+          className="file-upload"
+        />
+        <label htmlFor="fileUpload" className="upload-label">
+          +
+        </label>
       </div>
-
-      {/* 메모 입력 필드 */}
       <textarea
-        placeholder="메모를 입력하세요... #해시태그"
+        placeholder="메모를 입력하세요... "
         value={memo}
         onChange={handleMemoChange}
-        style={{ width: '100%', height: '100px', marginBottom: '20px' }}
+        className="memo-textarea"
       />
-
-      {/* 선호도 설정 (하트 아이콘) */}
-      <div>
-        <h3>코스 만족도 설정</h3>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="preference-container">
+        {[1, 2, 3].map((level) => (
           <span
-            onClick={() => handlePreferenceChange(1)}
-            style={{ cursor: 'pointer', fontSize: '30px', color: preference >= 1 ? 'red' : 'gray' }}
+            key={level}
+            onClick={() => handlePreferenceChange(level)}
+            className={`preference-icon ${preference >= level ? 'active' : ''}`}
           >
-            {preference >= 1 ? '❤️' : '♡'}
+            {preference >= level ? '❤️' : '♡'}
           </span>
-          <span
-            onClick={() => handlePreferenceChange(2)}
-            style={{ cursor: 'pointer', fontSize: '30px', color: preference >= 2 ? 'red' : 'gray', marginLeft: '10px' }}
-          >
-            {preference >= 2 ? '❤️' : '♡'}
-          </span>
-          <span
-            onClick={() => handlePreferenceChange(3)}
-            style={{ cursor: 'pointer', fontSize: '30px', color: preference >= 3 ? 'red' : 'gray', marginLeft: '10px' }}
-          >
-            {preference >= 3 ? '❤️' : '♡'}
-          </span>
-        </div>
-        <p>선택된 만족도: {preference}단계</p>
+        ))}
       </div>
 
-      {/* 해시태그 입력 필드 */}
-      <div>
-        <h3>해시태그 추가</h3>
-        <input
-          type="text"
-          placeholder="해시태그를 입력하세요"
-          value={hashtagInput}
-          onChange={handleHashtagChange}
-          onKeyPress={handleHashtagKeyPress}
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-          {hashtags.map((hashtag, index) => (
-            <div key={index} style={{ backgroundColor: '#e0e0e0', borderRadius: '20px', padding: '5px 10px', display: 'flex', alignItems: 'center' }}>
-              <span>{`#${hashtag}`}</span>
-              <button
-                onClick={() => removeHashtag(index)}
-                style={{ marginLeft: '10px', cursor: 'pointer', background: 'none', border: 'none', color: 'red' }}
-                >
-                  X
-                </button>
-              </div>
-            ))}
+      {/* 추천 키워드 섹션 */}
+      <h3 className="recommended-keywords-title">추천 키워드</h3>
+      <div className="recommended-keywords-container">
+        {recommendedKeywords.map((keyword, index) => (
+          <div key={index} className="recommended-keyword" onClick={() => addRecommendedKeyword(keyword)}>
+            {keyword}
           </div>
-        </div>
-  
-        {/* 완료 버튼 */}
-        <button 
-          onClick={handleSubmit} 
-          style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'green', color: 'white' }}
-        >
-          완료
-        </button>
-  
-        {/* 추가된 마커 정보 */}
-        <h3>저장된 Spot 정보:</h3>
-        <ul>
-          {markers.map((marker, index) => (
-            <li key={index}>
-              <strong>위도:</strong> {marker.lat}, <strong>경도:</strong> {marker.lng}, <strong>주소:</strong> {marker.address}, <strong>시간:</strong> {marker.date}
-            </li>
-          ))}
-        </ul>
+        ))}
       </div>
-    );
-  };
-  
-  export default StoryRecord;
-   
+
+      <input
+        type="text"
+        placeholder="해시태그를 입력하세요"
+        value={hashtagInput}
+        onChange={handleHashtagChange}
+        onKeyPress={handleHashtagKeyPress}
+        className="hashtag-input"
+      />
+      <div className="hashtag-container">
+        {hashtags.map((hashtag, index) => (
+          <div key={index} className="hashtag">
+            <span>{`#${hashtag}`}</span>
+            <button onClick={() => removeHashtag(index)} className="hashtag-remove">
+              X
+            </button>
+          </div>
+        ))}
+      </div>
+      <button onClick={handleSubmit} className="submit-button">
+        완료
+      </button>
+      <h3 className="saved-spot-title">저장된 Spot 정보:</h3>
+      <DragDropContext onDragEnd={onDragEnd}>
+        {isDroppableLoaded && (
+          <Droppable droppableId="droppable-markers">
+            {(provided) => (
+              <ul {...provided.droppableProps} ref={provided.innerRef} className="marker-list">
+                {markers.map((marker, index) => (
+                  <Draggable key={`marker-${index}`} draggableId={`marker-${index}`} index={index}>
+                    {(provided) => (
+                      <li
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className="marker-item"
+                      >
+                        장소 {index + 1} - {marker.address}
+                      </li>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </ul>
+            )}
+          </Droppable>
+        )}
+      </DragDropContext>
+      <FooterNav />
+    </div>
+  );
+};
+
+export default StoryRecord;
