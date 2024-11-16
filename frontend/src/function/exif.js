@@ -37,3 +37,4 @@ export const extractExifData = (file, callback) => {
     }
   });
 };
+//asfd
