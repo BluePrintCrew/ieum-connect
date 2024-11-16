@@ -1,193 +1,245 @@
 /* storydetail.css */
 
+/* slick-carousel CSS 임포트 */
+@import "~slick-carousel/slick/slick.css";
+@import "~slick-carousel/slick/slick-theme.css";
+
+/* 전체 컨테이너 스타일 */
 .story-detail-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f0f4f8; /* storyrecord.css의 배경색과 동일하게 수정 */
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f0f4f8;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 제목 스타일 */
+.story-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* 작성자 정보 스타일 */
+.story-info {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 내용 스타일 */
+.story-content {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* 지도 섹션 스타일 */
+.story-map {
+  margin-bottom: 20px;
+}
+
+.story-map #map {
+  width: 100%;
+  height: 400px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* 이미지 슬라이드 쇼 스타일 */
+.story-photos {
+  margin-top: 20px;
+}
+
+/* react-slick 슬라이더의 슬라이드 설정 */
+.story-photos .photo-item {
+  position: relative;
+  text-align: center;
+}
+
+/* 슬라이더 내 이미지 스타일 */
+.story-photos .photo-item img {
+  width: 100%;
+  height: 500px; /* 고정 높이 */
+  object-fit: cover; /* 이미지가 컨테이너를 채우도록 설정 */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top:10px;
+}
+
+/* 슬라이더 도트 스타일 */
+.slick-dots {
+  bottom: 10px;
+}
+
+.slick-dots li button:before {
+  color: #ccc;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #ff7675;
+}
+
+/* 좋아요 섹션 스타일 */
+.like-section {
+  margin-top:30px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.like-section button {
+  background-color: #ff7675;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.like-section button:hover {
+  background-color: #e64e4e;
+}
+
+.like-section span {
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* 선호도 아이콘 스타일 */
+.preference-container {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.preference-icon {
+  font-size: 24px;
+  margin-right: 5px;
+  transition: transform 0.2s;
+}
+
+.preference-icon.active {
+  color: #ff7675;
+  transform: scale(1.1);
+}
+
+/* 해시태그 스타일 */
+.hashtag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.hashtag {
+  background-color: #e0e0e0;
+  color: #333;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 14px;
+}
+
+/* 댓글 섹션 스타일 */
+.comments-section {
+  margin-top: 20px;
+}
+
+.comments-section h3 {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.comment {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-comment {
+  display: flex;
+  margin-top: 10px;
+}
+
+.add-comment input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.add-comment button {
+  padding: 10px 20px;
+  background-color: #74b9ff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.add-comment button:hover {
+  background-color: #4a8cd9;
+}
+
+/* 반응형 디자인 */
+@media screen and (max-width: 768px) {
+  .story-detail-container {
+    padding: 10px;
   }
-  
+
   .story-title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  
-  .story-info {
-    font-size: 14px;
-    color: #777;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .story-content {
-    font-size: 16px;
-    line-height: 1.6;
-    margin-bottom: 20px;
-  }
-  
-  .story-photos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .photo-item {
-    flex: 1 1 calc(50% - 10px);
-    box-sizing: border-box;
-  }
-  
-  .photo-item img {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .story-map {
-    margin-bottom: 20px;
-  }
-  
-  .like-section {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .like-section button {
-    background-color: #ff7675;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .like-section button:hover {
-    background-color: #e64e4e;
-  }
-  
-  .like-section span {
-    margin-left: 10px;
-    font-size: 16px;
-    font-weight: bold;
-  }
-  
-  .preference-container {
-    display: flex;
-    margin-bottom: 20px;
-  }
-  
-  .preference-icon {
-    font-size: 24px;
-    margin-right: 5px;
-    transition: transform 0.2s;
-  }
-  
-  .preference-icon.active {
-    color: #ff7675;
-    transform: scale(1.1);
-  }
-  
-  .hashtag-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .hashtag {
-    background-color: #e0e0e0;
-    color: #333;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 14px;
-  }
-  
-  .comments-section {
-    margin-top: 20px;
-  }
-  
-  .comments-section h3 {
-    margin-bottom: 10px;
     font-size: 20px;
   }
-  
-  .comment {
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-  }
-  
-  .add-comment {
-    display: flex;
-    margin-top: 10px;
-  }
-  
-  .add-comment input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-right: 10px;
-  }
-  
-  .add-comment button {
-    padding: 10px 20px;
-    background-color: #74b9ff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .add-comment button:hover {
-    background-color: #4a8cd9;
-  }
 
-
- /* storydetail.css */
-
-/* 사진 슬라이드 부분의 스타일 */
-.story-photos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  
-  .photo-item {
-    width: 200px; /* 사진 크기를 고정 */
-    height: 200px; /* 사진 크기를 고정 */
-    overflow: hidden;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    position: relative;
-  }
-  
-  .photo-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* 비율을 유지하며 사진을 꽉 채움 */
-  }
-  
-  .photo-item span {
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
-    background: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    padding: 2px 5px;
-    border-radius: 5px;
+  .story-info {
     font-size: 12px;
+    flex-direction: column;
+    align-items: flex-start;
   }
-   
+
+  .story-map #map {
+    height: 300px;
+  }
+
+  .story-photos .photo-item img {
+    height: 300px; /* 모바일에서 이미지 높이 조정 */
+  }
+
+  .preference-icon {
+    font-size: 20px;
+  }
+
+  .like-section button {
+    padding: 8px 16px;
+  }
+
+  .add-comment input {
+    padding: 8px;
+  }
+
+  .add-comment button {
+    padding: 8px 16px;
+  }
+
+  /* 슬라이더 도트 위치 조정 */
+  .slick-dots {
+    bottom: 5px;
+  }
+}
+
+/* 슬라이더 추가 스타일 (선택 사항) */
+.story-photos .slick-slide {
+  padding: 0;
+}
+
+.story-photos .slick-list {
+  margin: 0;
+}

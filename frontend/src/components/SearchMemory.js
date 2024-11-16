@@ -10,7 +10,7 @@ const SearchMemory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [filterOption, setFilterOption] = useState('추천순');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0); // 백엔드 페이지는 0부터 시작
   const [totalPages, setTotalPages] = useState(1);
   const RESULTS_PER_PAGE = 10;
 
@@ -20,14 +20,14 @@ const SearchMemory = () => {
     const query = params.get('query');
     if (query) {
       setSearchQuery(query);
-      fetchSearchResults(query, 1);
+      fetchSearchResults(query, 0); // 페이지 번호 0으로 변경
     }
   }, [location.search]);
 
   // 필터 옵션 변경 시 검색 결과 업데이트
   useEffect(() => {
     if (searchQuery) {
-      fetchSearchResults(searchQuery, 1);
+      fetchSearchResults(searchQuery, 0);
     }
   }, [filterOption]);
 
@@ -43,26 +43,28 @@ const SearchMemory = () => {
 
   const fetchSearchResults = async (query, page) => {
     try {
-      const response = await axios.get('/mock/beststories.json', {
+      const response = await axios.get('http://localhost:8080/api/stories/search', {
         params: {
           hashtag: query,
-          sort: filterOption === '추천순' ? 'likes' : 'date',
+          page: page,
+          size: RESULTS_PER_PAGE,
+          sort: filterOption === '추천순' ? 'likeCount' : 'createdAt',
+          direction: 'desc',
         },
       });
-      const allResults = response.data;
-      const total = allResults.length;
-      setTotalPages(Math.ceil(total / RESULTS_PER_PAGE));
-      setSearchResults(allResults.slice((page - 1) * RESULTS_PER_PAGE, page * RESULTS_PER_PAGE));
+      const data = response.data;
+      setTotalPages(data.totalPages);
+      setSearchResults(data.content);
       setCurrentPage(page);
     } catch (error) {
-      console.error("검색 결과를 가져오는 데 실패했습니다:", error);
+      console.error('검색 결과를 가져오는 데 실패했습니다:', error);
     }
   };
 
   const handlePageChange = (direction) => {
-    if (direction === 'prev' && currentPage > 1) {
+    if (direction === 'prev' && currentPage > 0) {
       fetchSearchResults(searchQuery, currentPage - 1);
-    } else if (direction === 'next' && currentPage < totalPages) {
+    } else if (direction === 'next' && currentPage < totalPages - 1) {
       fetchSearchResults(searchQuery, currentPage + 1);
     }
   };
@@ -86,50 +88,45 @@ const SearchMemory = () => {
         />
       </div>
 
-      {/* 필터 옵션 */}
-      <div className="filter-options">
-        <select value={filterOption} onChange={(e) => setFilterOption(e.target.value)}>
-          <option value="추천순">추천순</option>
-          <option value="최신순">최신순</option>
-        </select>
-      </div>
+     {/* 필터 옵션과 현재 페이지 번호 */}
+<div className="filter-options-container">
+  <div className="current-page-number">페이지 {currentPage + 1}</div>
+  <div className="filter-options">
+    <button
+      className="pagination-button"
+      onClick={() => handlePageChange('prev')}
+      disabled={currentPage === 0}
+    >
+      ◀️
+    </button>
+    <select value={filterOption} onChange={(e) => setFilterOption(e.target.value)}>
+      <option value="추천순">추천순</option>
+      <option value="최신순">최신순</option>
+    </select>
+    <button
+      className="pagination-button"
+      onClick={() => handlePageChange('next')}
+      disabled={currentPage === totalPages - 1}
+    >
+      ▶️
+    </button>
+  </div>
+</div>
+ 
 
       {/* 검색 결과 리스트 */}
       <div className="search-results">
         {searchResults.length > 0 ? (
           searchResults.map((result, index) => (
             <div key={result.storyId} className="story-item" onClick={() => navigate(`/story/detail/${result.storyId}`)}>
-              <span className="story-number">{(currentPage - 1) * RESULTS_PER_PAGE + index + 1}.</span>
+              <span className="story-number">{currentPage * RESULTS_PER_PAGE + index + 1}.</span>
               <span className="story-name">{result.title}</span>
-              <span className="likes">좋아요 {result.likes}개</span>
+              <span className="likes">좋아요 {result.likeCount}개</span>
             </div>
           ))
         ) : (
           <div className="no-results-message">
             검색 결과가 없습니다.
-          </div>
-        )}
-      </div>
-
-      {/* 페이지 네비게이션 */}
-      <div className="pagination-container">
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              className="pagination-button"
-              onClick={() => handlePageChange('prev')}
-              disabled={currentPage === 1}
-            >
-              ◀️
-            </button>
-            <span className="current-page">현재 페이지 {currentPage}</span>
-            <button
-              className="pagination-button"
-              onClick={() => handlePageChange('next')}
-              disabled={currentPage === totalPages}
-            >
-              ▶️
-            </button>
           </div>
         )}
       </div>
