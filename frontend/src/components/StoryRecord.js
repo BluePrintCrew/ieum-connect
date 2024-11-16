@@ -35,7 +35,6 @@ const StoryRecord = () => {
       try {
         const loadedModel = await cocoSsd.load();
         setModel(loadedModel);
-        console.log('COCO-SSD 모델이 성공적으로 로드되었습니다.');
       } catch (error) {
         console.error('모델 로드 중 오류 발생:', error);
       }
@@ -105,9 +104,7 @@ const StoryRecord = () => {
     img.onload = async () => {
       try {
         let predictions = await model.detect(img);
-        console.log('객체 감지 결과:', predictions);
         if (predictions.length === 0) {
-          console.log('객체가 없음: 배경 이미지로 간주하여 ChatGPT에 요청합니다.');
           await recommendKeywordsFromChatGPT(file);
         } else {
           predictions = predictions.slice(0, 2);
@@ -166,8 +163,6 @@ const StoryRecord = () => {
         .map((kw) => kw.trim().replace(/^#+/, ''))
         .filter((kw) => kw !== '' && kw !== '"');
 
-      console.log(`추천된 키워드 (${label}):`, chatGPTKeywords);
-
       setRecommendedKeywords((prevKeywords) => [...prevKeywords, ...chatGPTKeywords]);
     } catch (error) {
       console.error('키워드 추천 중 오류 발생:', error);
@@ -210,8 +205,6 @@ const StoryRecord = () => {
         .split(',')
         .map((kw) => kw.trim().replace(/^#+/, ''))
         .filter((kw) => kw !== '' && kw !== '"' && kw !== "'");
-
-      console.log('추천된 배경 이미지 키워드:', chatGPTKeywords);
 
       setRecommendedKeywords((prevKeywords) => [...prevKeywords, ...chatGPTKeywords]);
     } catch (error) {
@@ -260,20 +253,20 @@ const StoryRecord = () => {
       alert('제목과 메모는 필수 입력 사항입니다.');
       return;
     }
-
+  
     if (selectedFiles.length === 0) {
       alert('이미지를 하나 이상 업로드해야 합니다.');
       return;
     }
-
+  
     if (markers.length === 0) {
       alert('경로에 최소 하나 이상의 스팟이 필요합니다.');
       return;
     }
-
+  
     // routePoints 준비
     const routePoints = convertMarkersToRoutePoints();
-
+  
     // storyInfo 객체 생성
     const storyInfo = {
       title: title.trim(),
@@ -283,36 +276,39 @@ const StoryRecord = () => {
       hashtags: hashtags.filter(Boolean),
       routePoints,
     };
-
+  
+    // storyInfo를 JSON으로 출력
+    console.log('storyInfo:', JSON.stringify(storyInfo, null, 2));
+  
     // FormData 객체 생성
     const formData = new FormData();
-
-    // storyInfo를 JSON 문자열로 추가
-    formData.append('storyInfo', JSON.stringify(storyInfo));
-
+  
+    // storyInfo를 JSON Blob으로 변환하여 추가
+    formData.append('storyInfo', new Blob([JSON.stringify(storyInfo)], { type: 'application/json' }));
+  
     // 이미지 추가
     selectedFiles.forEach((file) => {
       formData.append('images', file);
     });
-
+  
     // FormData 내용 확인 (디버깅용)
     for (let [key, value] of formData.entries()) {
       if (key === 'storyInfo') {
-        try {
-          const parsed = JSON.parse(value);
-          console.log(key, parsed);
-        } catch (error) {
-          console.error('storyInfo JSON 파싱 오류:', error);
-        }
+        // Blob의 내용을 읽어와서 출력
+        const reader = new FileReader();
+        reader.onload = () => {
+          console.log(key, JSON.parse(reader.result));
+        };
+        reader.readAsText(value);
       } else {
         console.log(key, value);
       }
     }
-
+  
     try {
-      // 'Content-Type' 헤더를 설정하지 않습니다. axios가 자동으로 설정합니다.
+      // 'Content-Type' 헤더를 설정하지 않습니다.
       const response = await axios.post('http://localhost:8080/api/stories', formData);
-
+  
       if (response.status === 200) {
         console.log('스토리 생성 성공:', response.data);
         navigate('/stories');
@@ -326,7 +322,7 @@ const StoryRecord = () => {
       }
     }
   };
-
+  
   const onDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -346,7 +342,6 @@ const StoryRecord = () => {
         onChange={handleTitleChange}
         className="title-input"
       />
-      {/* visibility 선택 요소 추가 */}
       <div className="visibility-container">
         <label>
           공개 범위:
@@ -404,8 +399,6 @@ const StoryRecord = () => {
           </span>
         ))}
       </div>
-
-      {/* 추천 키워드 섹션 */}
       <h3 className="recommended-keywords-title">추천 키워드</h3>
       <div className="recommended-keywords-container">
         {recommendedKeywords.map((keyword, index) => (
@@ -414,7 +407,6 @@ const StoryRecord = () => {
           </div>
         ))}
       </div>
-
       <input
         type="text"
         placeholder="해시태그를 입력하세요"
