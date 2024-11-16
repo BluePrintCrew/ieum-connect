@@ -1,0 +1,87 @@
+/* KakaoMap.css */
+
+/* 돋보기 아이콘 스타일 */
+.map-search-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  background-color: #ff6b81;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.map-search-button:hover {
+  background-color: #ff4757;
+}
+
+/* 검색바 스타일 */
+.map-search-bar {
+  position: absolute;
+  top: 70px; /* 돋보기 아이콘 아래로 배치 */
+  right: 10px;
+  z-index: 2;
+  background-color: white;
+  padding: 10px;
+  border-radius: 30px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.map-search-bar input {
+  width: 200px;
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  border-radius: 30px;
+}
+
+.map-search-bar button {
+  padding: 10px 15px;
+  margin-left: 10px;
+  border: none;
+  background-color: #ff6b81;
+  color: white;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.map-search-bar button:hover {
+  background-color: #ff4757;
+}
+
+/* 검색 결과 목록 스타일 */
+.map-search-results {
+  position: absolute;
+  top: 130px; /* 검색바 아래에 배치 */
+  right: 10px;
+  z-index: 2;
+  width: 250px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.map-search-result-item {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+}
+
+.map-search-result-item:hover {
+  background-color: #f8f8f8;
+}
+
+.map-search-result-item:last-child {
+  border-bottom: none;
+}

@@ -47,6 +47,7 @@
   height: 50px;
   margin-right: 10px;
   border-radius: 5px;
+  object-fit: cover;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -85,6 +86,49 @@
 
 .memo-textarea {
   height: 100px;
+}
+
+/* 공개 범위 선택 요소 스타일 */
+.visibility-container {
+  margin-bottom: 20px;
+}
+
+.visibility-container label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.visibility-container select {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #fafafa;
+  font-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg width="14" height="10" viewBox="0 0 14 10" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M7 10L0.937822 0H13.0622L7 10Z" fill="%23999"/%3E%3C/svg%3E');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 8px;
+}
+
+.visibility-container select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #0095f6;
+}
+
+.visibility-container::after {
+  content: '';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  margin-top: -3px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 }
 
 /* 버튼 정렬 컨테이너 */
