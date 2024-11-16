@@ -74,11 +74,17 @@ public class StoryService {
         story.setDescription(memo);
         story.setVisibility(visibility); // default를 private로 일단 두는게 좋을 것 같다.
         story.setPreference(preference);
+
+        //route 생성
         Route route = new Route();
         route.setName(title);
+
         route.setStory(story);
         story.setRoute(route); // 여기서 story route설정.
 
+        // 4. 먼저 Story 저장 (Route는 cascade로 저장됨)
+        story = storyRepository.save(story);
+        
         List<RoutePoint> routePoints = createRoutePoints(routePointDTOS, route); // routePoint로 저장
         route.setRoutePoints(routePoints); // route가 갖는 루트 포인트들
 

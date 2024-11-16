@@ -63,6 +63,17 @@ public class Story {
 
     // Getters and setters
     // ...
+    public void setRoute(Route route) {
+        this.route = route;
+        if (route.getStory() != this) {
+            route.setStory(this);
+        }
+    }
+
+    public void addPhoto(Photo photo) {
+        this.photos.add(photo);
+        photo.setStory(this);
+    }
 
     @PrePersist
     protected void onCreate() {

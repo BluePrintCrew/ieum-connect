@@ -38,9 +38,22 @@ public class Route {
     )
     private List<Hashtag> hashtags = new ArrayList<>();
 
-     public void addHashtag(Hashtag hashtag) {
-        hashtags.add(hashtag);
+    public void setStory(Story story) {
+        this.story = story;
+        if (story.getRoute() != this) {
+            story.setRoute(this);
+        }
     }
+
+    public void addRoutePoint(RoutePoint routePoint) {
+        this.routePoints.add(routePoint);
+        routePoint.setRoute(this);
+    }
+
+    public void addHashtag(Hashtag hashtag) {
+        this.hashtags.add(hashtag);
+    }
+
 
     // Getters and setters
     // ...
