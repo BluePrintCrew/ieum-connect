@@ -67,6 +67,70 @@ public class StoryService {
     public Page<Story> findStoriesByHashtag(String hashtagName, Pageable pageable){
         return storyRepository.findByRouteHashtagsNameContainingIgnoreCaseAndVisibility(hashtagName,Story.Visibility.PUBLIC,pageable);
     }
+    // 사진 두개 이상 넣기 위한 발버둥
+    @Transactional
+    public Story createStoryInfo(User user, String title, String memo, int preference,
+                                 Story.Visibility visibility, List<String> hashtags,
+                                 List<ResponseStoryDto.RoutePointDTO> routePointDTOS) throws IOException {
+        Story story = new Story();
+        story.setUser(user);
+        story.setTitle(title);
+        story.setDescription(memo);
+        story.setVisibility(visibility);
+        story.setPreference(preference);
+
+        story = storyRepository.save(story);
+
+        Route route = new Route();
+        route.setName(title);
+
+        story.setRoute(route);
+        route.setStory(story);
+
+        // RoutePoints 생성
+        List<RoutePoint> routePoints = new ArrayList<>();
+        for (ResponseStoryDto.RoutePointDTO routePointDTO : routePointDTOS) {
+            RoutePoint routePoint = new RoutePoint();
+            AddressResponse addressResponse = kakaoAddressService.coordToAddress(
+                    routePointDTO.getLatitude().doubleValue(),
+                    routePointDTO.getLongitude().doubleValue()
+            );
+            routePoint.setLatitude(routePointDTO.getLatitude());
+            routePoint.setLongitude(routePointDTO.getLongitude());
+            routePoint.setOrderNum(routePointDTO.getOrderNum());
+            routePoint.setAddress(addressResponse.getAddress());
+            routePoint.setRoadAddress(addressResponse.getRoadAddress());
+            routePoint.setRoute(route);
+            routePoints.add(routePoint);
+        }
+        route.setRoutePoints(routePoints);
+
+        List<Hashtag> hashtagEntities = createHashtags(hashtags);
+        route.getHashtags().addAll(hashtagEntities);
+
+        return storyRepository.save(story);
+    }
+    @Transactional
+    public Photo addStoryImage(Long storyId, MultipartFile image) throws IOException, ImageReadException {
+        Story story = storyRepository.findByStoryId(storyId);
+        if (story == null) {
+            throw new RuntimeException("Story not found with id: " + storyId);
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'['yyyy:MM:dd HH:mm:ss']'");
+
+        PhotoInfoDTO photoInfoDTO = photoService.extractMetadata(image);
+        Photo photo = new Photo();
+        photo.setStory(story);
+        photo.setFilePath(saveImageFile(image));
+        photo.setTakenAt(LocalDateTime.parse(photoInfoDTO.getTakenAt(), formatter));
+        photo.setLatitude(photoInfoDTO.getLatitude());
+        photo.setLongitude(photoInfoDTO.getLongitude());
+
+        return photoRepository.save(photo);
+    }
+
+
     // 선호도 추가는 추후에 진행
     @Transactional
     public Story createStory(User user, String title, String memo, int preference, Story.Visibility visibility, List<String> hashtags, List<ResponseStoryDto.RoutePointDTO> routePointDTOS, List<MultipartFile> images) throws IOException {

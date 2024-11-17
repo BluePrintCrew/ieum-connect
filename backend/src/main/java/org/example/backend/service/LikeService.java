@@ -28,7 +28,7 @@ public class LikeService {
      * @return 생성된 Like 엔티티
      */
     @Transactional
-    public Like addLike(LikeDto likeDto) {
+    public Like addLike(LikeDto.LikeCreateDto likeDto) {
         Story story = storyRepository.findById(likeDto.getStoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Story not found"));
         User user = userRepository.findById(likeDto.getUserId())

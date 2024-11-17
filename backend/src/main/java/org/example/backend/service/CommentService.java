@@ -21,7 +21,7 @@ public class CommentService {
     private final StoryRepository storyRepository;
     private final UserRepository userRepository;
 
-    public Comment addComment(CommentDto commentDto) {
+    public Comment addComment(CommentDto.CommentCreateDto commentDto) {
         Story story = storyRepository.findById(commentDto.getStoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Story not found"));
         User user = userRepository.findById(commentDto.getUserId())

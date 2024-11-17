@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.imaging.ImageReadException;
 import org.example.backend.domain.Hashtag;
+import org.example.backend.domain.Photo;
 import org.example.backend.domain.Story;
 import org.example.backend.domain.User;
 import org.example.backend.dto.ResponseStoryDto;
@@ -21,7 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,35 +43,89 @@ public class StoryController {
     }
 
 
-    // CREATE
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "스토리 생성", description = "storyinfo, images 라는 두 종류로 묶어야함(MUltipart)")
-    public ResponseEntity<?> createStory(
-            @RequestPart("storyInfo") ResponseStoryDto.CreateStoryRequest request, // - story info part
-            @RequestPart("images") List<MultipartFile> images) { // image 관련 파트
+//    // CREATE
+//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @Operation(summary = "스토리 생성", description = "storyinfo, images 라는 두 종류로 묶어야함(MUltipart)")
+//    public ResponseEntity<?> createStory(
+//            @RequestPart("storyInfo") ResponseStoryDto.CreateStoryRequest request, // - story info part
+//            @RequestPart("images") List<MultipartFile> images) { // image 관련 파트
+//        try {
+//            // 나중에 실제 유저 인증에 대한 로직이 들어가야함
+//            User tempUser = new User();
+//            tempUser.setUserId(1L);
+//
+//            Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
+//                    request.getPreference(), request.getVisibility(),request.getHashtags(),request.getRoutePoints(), images);
+//
+//            ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
+//            response.setStatus("success");
+//            response.setMessage("스토리가 성공적으로 저장되었습니다.");
+//            response.setSavedStoryId(savedStory.getStoryId());
+//            response.setCreatedAt(ZonedDateTime.now());
+//
+//            return ResponseEntity.ok(response);
+//        } catch (IOException e) {
+//            ResponseStoryDto.ErrorResponse errorResponse = new ResponseStoryDto.ErrorResponse("error", e.getMessage());
+//            errorResponse.setStatus("error");
+//            errorResponse.setMessage("스토리 저장 중 오류가 발생했습니다: " + e.getMessage());
+//            return ResponseEntity.badRequest().body(errorResponse);
+//        }
+//    }
+
+
+    @PostMapping("/info")
+    @Operation(summary = "스토리 기본 정보 생성")
+    public ResponseEntity<?> createStoryInfo(
+            @RequestBody ResponseStoryDto.CreateStoryRequest request) {
         try {
             // 나중에 실제 유저 인증에 대한 로직이 들어가야함
             User tempUser = new User();
             tempUser.setUserId(1L);
 
-            Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
-                    request.getPreference(), request.getVisibility(),request.getHashtags(),request.getRoutePoints(), images);
+            Story savedStory = storyService.createStoryInfo(
+                    tempUser,
+                    request.getTitle(),
+                    request.getMemo(),
+                    request.getPreference(),
+                    request.getVisibility(),
+                    request.getHashtags(),
+                    request.getRoutePoints()
+            );
 
             ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
             response.setStatus("success");
-            response.setMessage("스토리가 성공적으로 저장되었습니다.");
+            response.setMessage("스토리 기본 정보가 저장되었습니다.");
             response.setSavedStoryId(savedStory.getStoryId());
             response.setCreatedAt(ZonedDateTime.now());
 
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             ResponseStoryDto.ErrorResponse errorResponse = new ResponseStoryDto.ErrorResponse("error", e.getMessage());
-            errorResponse.setStatus("error");
-            errorResponse.setMessage("스토리 저장 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 
+    @PostMapping("/{storyId}/images")
+    @Operation(summary = "스토리에 이미지 추가")
+    public ResponseEntity<?> addStoryImage(
+            @PathVariable Long storyId,
+            @RequestPart("image") MultipartFile image) {
+        try {
+            Photo savedPhoto = storyService.addStoryImage(storyId, image);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "이미지가 성공적으로 추가되었습니다.");
+            response.put("photoId", savedPhoto.getPhotoId());
+
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            ResponseStoryDto.ErrorResponse errorResponse = new ResponseStoryDto.ErrorResponse("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (ImageReadException e) {
+            throw new RuntimeException(e);
+        }
+    }
     // READ
     @GetMapping("/{storyId}")
     @Operation(summary = "story id를 통한 조회, 사용자가 게시글을 눌렀을때!")

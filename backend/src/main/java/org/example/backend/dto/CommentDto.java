@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class CommentDto {
-    private Long id;
+
     private Long storyId;
     private Long userId;
     private String content;
@@ -15,8 +15,8 @@ public class CommentDto {
     // 생성자
     public CommentDto() {}
 
-    public CommentDto(Long id, Long storyId, Long userId, String content, LocalDateTime createdAt) {
-        this.id = id;
+    public CommentDto(Long storyId, Long userId, String content, LocalDateTime createdAt) {
+
         this.storyId = storyId;
         this.userId = userId;
         this.content = content;
