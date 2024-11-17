@@ -1,4 +1,3 @@
-/* storydetail.js */
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -8,6 +7,13 @@ import Slider from 'react-slick'; // react-slick 임포트
 import 'slick-carousel/slick/slick.css'; // CSS 임포트
 import 'slick-carousel/slick/slick-theme.css'; // CSS 임포트
 
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8080', // 백엔드 서버의 기본 URL
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 const StoryDetail = () => {
   const { storyId } = useParams();
   const [story, setStory] = useState(null);
@@ -15,52 +21,101 @@ const StoryDetail = () => {
   const [newComment, setNewComment] = useState('');
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // 스토리 정보를 가져오기
     const fetchStory = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const response = await axios.get(`/mock/stories.json`);
-        const storyData = response.data.find((s) => s.storyId === parseInt(storyId));
+        const response = await axiosInstance.get(`/api/stories/${storyId}`);
+        const storyData = response.data;
 
         if (storyData) {
-          storyData.photos.sort((a, b) => new Date(a.takenAt) - new Date(b.takenAt));
+          if (storyData.photos) {
+            storyData.photos.sort((a, b) => new Date(a.takenAt) - new Date(b.takenAt));
+          }
           setStory(storyData);
-          setLikes(storyData.likes);
-          setComments(storyData.comments);
+          setLikes(storyData.likeCount);
+          setComments(storyData.comments || []);
+          setLiked(storyData.likedByUser); // 사용자에 따라 좋아요 여부
         } else {
-          console.error('해당 스토리를 찾을 수 없습니다.');
+          setError('해당 스토리를 찾을 수 없습니다.');
         }
-      } catch (error) {
-        console.error('스토리 정보를 가져오는 데 실패했습니다:', error);
+      } catch (err) {
+        setError('스토리 정보를 가져오는 데 실패했습니다.');
+        console.error('스토리 정보를 가져오는 데 실패했습니다:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchStory();
   }, [storyId]);
 
-  const handleLike = () => {
-    if (!liked) {
-      setLikes((prevLikes) => prevLikes + 1);
-      setLiked(true);
+  const handleLike = async () => {
+    try {
+      if (!liked) {
+        const response = await axiosInstance.post('/api/likes', {
+          storyId: parseInt(storyId),
+          userId: 1,
+        });
+        if (response.status === 200) {
+          setLikes((prevLikes) => prevLikes + 1);
+          setLiked(true);
+        }
+      } else {
+        const response = await axiosInstance.delete(`/api/likes/story/${storyId}`, {
+          data: {
+            userId: 1,
+          },
+        });
+        if (response.status === 200) {
+          setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
+          setLiked(false);
+        }
+      }
+    } catch (error) {
+      setError('좋아요 처리에 실패했습니다.');
+      console.error('좋아요 추가/취소에 실패했습니다:', error);
     }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    setComments((prevComments) => [...prevComments, { content: newComment }]);
-    setNewComment('');
+    try {
+      const response = await axiosInstance.post('/api/comments', {
+        storyId: parseInt(storyId),
+        userId: 1,
+        content: newComment,
+      });
+      if (response.status === 200) {
+        setComments((prevComments) => [
+          ...prevComments,
+          { content: newComment, username: '사용자', createdAt: new Date().toISOString() },
+        ]);
+        setNewComment('');
+      }
+    } catch (error) {
+      setError('댓글 추가에 실패했습니다.');
+      console.error('댓글 추가에 실패했습니다:', error);
+    }
   };
 
-  if (!story) {
+  if (loading) {
     return <div>로딩 중...</div>;
   }
 
-  // Slider 설정
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
   const sliderSettings = {
-    dots: true, // 하단에 점 네비게이션 표시
-    infinite: false, // 마지막 슬라이드에서 멈춤
+    dots: true,
+    infinite: false,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -71,11 +126,10 @@ const StoryDetail = () => {
       <h1 className="story-title">{story.title}</h1>
       <div className="story-info">
         <span>작성자: {story.user.username}</span>
-        <span>작성일: {story.createdAt}</span>
+        <span>작성일: {new Date(story.createdAt).toLocaleString()}</span>
       </div>
       <div className="story-content">{story.description}</div>
 
-      {/* 지도 섹션을 위로 이동 */}
       <div className="story-map">
         <h2>경로 지도</h2>
         {story.photos && (
@@ -95,23 +149,20 @@ const StoryDetail = () => {
         )}
       </div>
 
-      {/* 이미지 슬라이드 쇼 */}
       {story.photos && (
         <div className="story-photos">
           <Slider {...sliderSettings}>
             {story.photos.map((photo) => (
               <div key={photo.photoId} className="photo-item">
-                <img src={photo.filePath} alt="스토리 사진" />
-                {/* 필요에 따라 사진에 대한 설명이나 찍은 시간 등을 추가할 수 있습니다 */}
+                <img src={`http://localhost:8080${photo.filePath}`} alt="스토리 사진" />
               </div>
             ))}
           </Slider>
         </div>
       )}
-    
-      {/* 나머지 섹션들 */}
+
       <div className="like-section">
-        <button onClick={handleLike} disabled={liked}>
+        <button onClick={handleLike}>
           {liked ? '좋아요 취소' : '좋아요'}
         </button>
         <span>좋아요 {likes}개</span>
@@ -139,7 +190,7 @@ const StoryDetail = () => {
         {comments.length > 0 ? (
           comments.map((comment, index) => (
             <div key={index} className="comment">
-              <span>{comment.content}</span>
+              <span>{comment.username || '익명 사용자'}: {comment.content}</span>
             </div>
           ))
         ) : (

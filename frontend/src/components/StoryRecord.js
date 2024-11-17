@@ -9,7 +9,6 @@ import FooterNav from './Footernav';
 import axios from 'axios';
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
-import imageCompression from 'browser-image-compression';
 
 const StoryRecord = () => {
   const [title, setTitle] = useState('');
@@ -23,7 +22,6 @@ const StoryRecord = () => {
   const [isSpotAdding, setIsSpotAdding] = useState(false);
   const [markers, setMarkers] = useState([]);
   const [addresses, setAddresses] = useState([]);
-  const [isDroppableLoaded, setIsDroppableLoaded] = useState(false);
   const [model, setModel] = useState(null);
   const [visibility, setVisibility] = useState('PUBLIC');
   const navigate = useNavigate();
@@ -35,6 +33,7 @@ const StoryRecord = () => {
       try {
         const loadedModel = await cocoSsd.load();
         setModel(loadedModel);
+        console.log('모델이 로드되었습니다.');
       } catch (error) {
         console.error('모델 로드 중 오류 발생:', error);
       }
@@ -42,42 +41,30 @@ const StoryRecord = () => {
     loadModel();
   }, []);
 
-  useEffect(() => {
-    if (markers.length > 0) {
-      setIsDroppableLoaded(true);
-    }
-  }, [markers]);
-
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files).filter(
       (file) => file.type === 'image/jpeg' || file.type === 'image/png'
     );
     if (files.length > 0) {
-      const compressedFiles = [];
-      for (let file of files) {
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        };
-        try {
-          const compressedFile = await imageCompression(file, options);
-          compressedFiles.push(compressedFile);
-        } catch (error) {
-          console.error('이미지 압축 중 오류 발생:', error);
-        }
-      }
-      setSelectedFiles([...selectedFiles, ...compressedFiles]);
-      setImagePreviews([
-        ...imagePreviews,
-        ...compressedFiles.map((file) => URL.createObjectURL(file)),
-      ]);
-      compressedFiles.forEach((file) => extractExifData(file, addMarkerFromExif));
-      compressedFiles.forEach((file) => detectObjectsInImage(file));
+      setSelectedFiles([...selectedFiles, ...files]);
+      setImagePreviews([...imagePreviews, ...files.map((file) => URL.createObjectURL(file))]);
+      files.forEach((file) => {
+        processImage(file);
+      });
     }
   };
 
+  const processImage = async (file) => {
+    try {
+      await extractExifData(file, addMarkerFromExif);
+    } catch (error) {
+      console.error('EXIF 데이터 추출 중 오류 발생:', error);
+    }
+    detectObjectsInImage(file);
+  };
+
   const addMarkerFromExif = (data) => {
+    console.log('EXIF 데이터:', data);
     if (data && data.latitude && data.longitude) {
       getAddressFromCoords(data.latitude, data.longitude, (address) => {
         const newMarker = {
@@ -89,6 +76,8 @@ const StoryRecord = () => {
         setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
         setAddresses((prevAddresses) => [...prevAddresses, address]);
       });
+    } else {
+      console.warn('위도 및 경도 정보가 없습니다. EXIF 데이터:', data);
     }
   };
 
@@ -104,8 +93,9 @@ const StoryRecord = () => {
     img.onload = async () => {
       try {
         let predictions = await model.detect(img);
+        console.log('탐지된 객체:', predictions);
         if (predictions.length === 0) {
-          await recommendKeywordsFromChatGPT(file);
+          await recommendKeywordsFromChatGPT();
         } else {
           predictions = predictions.slice(0, 2);
           const newLabels = predictions
@@ -131,7 +121,18 @@ const StoryRecord = () => {
   const recommendKeywordsFromLabel = async (label) => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
+    await recommendKeywords(`사용자가 이미지에서 '${label}' 객체를 감지하였습니다. 해당 객체와 관련된 한국어 해시태그 키워드 3개를 추천해 주세요.`);
+    isUpdatingKeywords.current = false;
+  };
 
+  const recommendKeywordsFromChatGPT = async () => {
+    if (isUpdatingKeywords.current) return;
+    isUpdatingKeywords.current = true;
+    await recommendKeywords("이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어, '자연', '여행', '풍경'과 같은 키워드를 추천해 주세요.");
+    isUpdatingKeywords.current = false;
+  };
+
+  const recommendKeywords = async (prompt) => {
     try {
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
@@ -140,9 +141,7 @@ const StoryRecord = () => {
           messages: [
             {
               role: 'user',
-              content: `
-              당신은 재미있고 유행하는 키워드를 추천하는 어시스턴트입니다. 사용자가 이미지에서 특정 객체를 감지하면, 해당 객체 '${label}'와 관련된 한국어 해시태그 키워드 3개를 추천합니다. 예를 들어, '케이크'를 감지하면 '카페', '케이크맛집', '데이트장소'와 같은 사람들이 자주 사용하는 재미있고 유용한 단어를 제공합니다. 각 단어는 쉼표로 구분하여 한 줄로 작성하세요.
-              `,
+              content: prompt,
             },
           ],
           max_tokens: 50,
@@ -166,51 +165,6 @@ const StoryRecord = () => {
       setRecommendedKeywords((prevKeywords) => [...prevKeywords, ...chatGPTKeywords]);
     } catch (error) {
       console.error('키워드 추천 중 오류 발생:', error);
-    } finally {
-      isUpdatingKeywords.current = false;
-    }
-  };
-
-  const recommendKeywordsFromChatGPT = async () => {
-    if (isUpdatingKeywords.current) return;
-    isUpdatingKeywords.current = true;
-
-    try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'user',
-              content: `
-              이미지에서 감지된 객체가 없는 경우, 사용자가 제공한 배경 이미지에 대해 한국어로 적절한 해시태그 키워드 3개를 추천합니다. 예를 들어, 자연 풍경 이미지를 보면 '힐링', '자연여행', '풍경사진'과 같은 사람들이 자주 사용하는 단어를 제공합니다. 각 단어는 쉼표로 구분하여 한 줄로 작성하세요.
-              `,
-            },
-          ],
-          max_tokens: 50,
-          n: 1,
-          stop: null,
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.REACT_APP_CHATGPT_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const chatGPTKeywords = response.data.choices[0].message.content
-        .split(',')
-        .map((kw) => kw.trim().replace(/^#+/, ''))
-        .filter((kw) => kw !== '' && kw !== '"' && kw !== "'");
-
-      setRecommendedKeywords((prevKeywords) => [...prevKeywords, ...chatGPTKeywords]);
-    } catch (error) {
-      console.error('배경 이미지 키워드 추천 중 오류 발생:', error);
-    } finally {
-      isUpdatingKeywords.current = false;
     }
   };
 
@@ -228,10 +182,8 @@ const StoryRecord = () => {
 
   const addRecommendedKeyword = (keyword) => {
     const cleanedKeyword = keyword.replace(/^#+/, '').trim();
-    const formattedKeyword = `${cleanedKeyword}`;
-
-    if (!hashtags.includes(formattedKeyword)) {
-      setHashtags([...hashtags, formattedKeyword]);
+    if (!hashtags.includes(cleanedKeyword)) {
+      setHashtags([...hashtags, cleanedKeyword]);
     }
   };
 
@@ -248,26 +200,20 @@ const StoryRecord = () => {
   };
 
   const handleSubmit = async () => {
-    // 필수 입력 사항 확인
     if (!title.trim() || !memo.trim()) {
       alert('제목과 메모는 필수 입력 사항입니다.');
       return;
     }
-  
     if (selectedFiles.length === 0) {
       alert('이미지를 하나 이상 업로드해야 합니다.');
       return;
     }
-  
     if (markers.length === 0) {
       alert('경로에 최소 하나 이상의 스팟이 필요합니다.');
       return;
     }
-  
-    // routePoints 준비
+
     const routePoints = convertMarkersToRoutePoints();
-  
-    // storyInfo 객체 생성
     const storyInfo = {
       title: title.trim(),
       memo: memo.trim(),
@@ -276,42 +222,18 @@ const StoryRecord = () => {
       hashtags: hashtags.filter(Boolean),
       routePoints,
     };
-  
-    // storyInfo를 JSON으로 출력
-    console.log('storyInfo:', JSON.stringify(storyInfo, null, 2));
-  
-    // FormData 객체 생성
+
     const formData = new FormData();
-  
-    // storyInfo를 JSON Blob으로 변환하여 추가
     formData.append('storyInfo', new Blob([JSON.stringify(storyInfo)], { type: 'application/json' }));
-  
-    // 이미지 추가
     selectedFiles.forEach((file) => {
       formData.append('images', file);
     });
-  
-    // FormData 내용 확인 (디버깅용)
-    for (let [key, value] of formData.entries()) {
-      if (key === 'storyInfo') {
-        // Blob의 내용을 읽어와서 출력
-        const reader = new FileReader();
-        reader.onload = () => {
-          console.log(key, JSON.parse(reader.result));
-        };
-        reader.readAsText(value);
-      } else {
-        console.log(key, value);
-      }
-    }
-  
+
     try {
-      // 'Content-Type' 헤더를 설정하지 않습니다.
       const response = await axios.post('http://localhost:8080/api/stories', formData);
-  
       if (response.status === 200) {
         console.log('스토리 생성 성공:', response.data);
-        navigate('/stories');
+        navigate('/home');
       } else {
         console.error('예상치 못한 응답:', response);
       }
@@ -322,7 +244,7 @@ const StoryRecord = () => {
       }
     }
   };
-  
+
   const onDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -430,29 +352,27 @@ const StoryRecord = () => {
       </button>
       <h3 className="saved-spot-title">저장된 Spot 정보:</h3>
       <DragDropContext onDragEnd={onDragEnd}>
-        {isDroppableLoaded && (
-          <Droppable droppableId="droppable-markers">
-            {(provided) => (
-              <ul {...provided.droppableProps} ref={provided.innerRef} className="marker-list">
-                {markers.map((marker, index) => (
-                  <Draggable key={`marker-${index}`} draggableId={`marker-${index}`} index={index}>
-                    {(provided) => (
-                      <li
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="marker-item"
-                      >
-                        장소 {index + 1} - {marker.address}
-                      </li>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </ul>
-            )}
-          </Droppable>
-        )}
+        <Droppable droppableId="droppable-markers">
+          {(provided) => (
+            <ul {...provided.droppableProps} ref={provided.innerRef} className="marker-list">
+              {markers.map((marker, index) => (
+                <Draggable key={`marker-${index}`} draggableId={`marker-${index}`} index={index}>
+                  {(provided) => (
+                    <li
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className="marker-item"
+                    >
+                      장소 {index + 1} - {marker.address}
+                    </li>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </ul>
+          )}
+        </Droppable>
       </DragDropContext>
       <FooterNav />
     </div>
