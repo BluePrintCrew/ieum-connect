@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -75,18 +76,41 @@ public class StoryService {
         story.setVisibility(visibility);
         story.setPreference(preference);
 
+        story = storyRepository.save(story);
+
         Route route = new Route();
         route.setName(title);
 
-        // 양방향 관계 설정
+        // 양방향 연관관계 설정
         story.setRoute(route);
+        route.setStory(story);
 
-        List<RoutePoint> routePoints = createRoutePoints(routePointDTOS, route);
-        route.getRoutePoints().addAll(routePoints);
+        // 4. Routepoints 생성
+//        List<RoutePoint> routePoints = createRoutePoints(routePointDTOS, route);
+//        route.setRoutePoints(routePoints);
+        //route.getRoutePoints().addAll(routePoints);
+
+        List<RoutePoint> routePoints = new ArrayList<>();
+        for (ResponseStoryDto.RoutePointDTO routePointDTO : routePointDTOS) {
+            RoutePoint routePoint = new RoutePoint();
+            AddressResponse addressResponse = kakaoAddressService.coordToAddress(
+                    routePointDTO.getLatitude().doubleValue(),
+                    routePointDTO.getLongitude().doubleValue()
+            );
+            routePoint.setLatitude(routePointDTO.getLatitude());
+            routePoint.setLongitude(routePointDTO.getLongitude());
+            routePoint.setOrderNum(routePointDTO.getOrderNum());
+            routePoint.setAddress(addressResponse.getAddress());
+            routePoint.setRoadAddress(addressResponse.getRoadAddress());
+            routePoint.setRoute(route);
+            routePoints.add(routePoint);
+        }
+        route.setRoutePoints(routePoints);
 
         if (images != null && !images.isEmpty()) {
             List<Photo> photos = createPhotos(images, story);
-            photos.forEach(story::addPhoto);
+
+            story.setPhotos(photos);
         }
 
         List<Hashtag> hashtagEntities = createHashtags(hashtags);
@@ -113,38 +137,45 @@ public class StoryService {
     }
 
 
-    private List<RoutePoint> createRoutePoints(List<ResponseStoryDto.RoutePointDTO> routePointDTOS, Route route) throws IOException {
-
-        List<RoutePoint> routePoints = new ArrayList<>();
-        for (ResponseStoryDto.RoutePointDTO routePointDTO : routePointDTOS) {
-            RoutePoint routePoint = new RoutePoint();
-            AddressResponse addressResponse = kakaoAddressService.coordToAddress(routePointDTO.getLatitude().doubleValue(), routePointDTO.getLongitude().doubleValue());
-            routePoint.setLatitude(routePointDTO.getLatitude());
-            routePoint.setLongitude(routePointDTO.getLongitude());
-            routePoint.setOrderNum(routePointDTO.getOrderNum());
-            routePoint.setAddress(addressResponse.getAddress());
-            routePoint.setRoadAddress(addressResponse.getRoadAddress());
-            routePoint.setRoute(route);
-            routePoints.add(routePoint);
-        }
-
-        return routePointRepository.saveAll(routePoints);
-    }
+//    private List<RoutePoint> createRoutePoints(List<ResponseStoryDto.RoutePointDTO> routePointDTOS, Route route) throws IOException {
+//
+//        List<RoutePoint> routePoints = new ArrayList<>();
+//        for (ResponseStoryDto.RoutePointDTO routePointDTO : routePointDTOS) {
+//            RoutePoint routePoint = new RoutePoint();
+//            AddressResponse addressResponse = kakaoAddressService.coordToAddress(
+//                    routePointDTO.getLatitude().doubleValue(),
+//                    routePointDTO.getLongitude().doubleValue()
+//            );
+//
+//            routePoint.setLatitude(routePointDTO.getLatitude());
+//            routePoint.setLongitude(routePointDTO.getLongitude());
+//            routePoint.setOrderNum(routePointDTO.getOrderNum());
+//            routePoint.setAddress(addressResponse.getAddress());
+//            routePoint.setRoadAddress(addressResponse.getRoadAddress());
+//            routePoint.setRoute(route);
+//            routePoints.add(routePoint);
+//        }
+//
+//        return routePointRepository.saveAll(routePoints);
+//    }
 
     private List<Photo> createPhotos(List<MultipartFile> images, Story story) throws IOException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'['yyyy:MM:dd HH:mm:ss']'");
+
         List<Photo> photos = images.stream()
                 .map(image -> {
                     try {
                         PhotoInfoDTO photoInfoDTO = photoService.extractMetadata(image);
                         Photo photo = new Photo();
                         photo.setStory(story);
-                        photo.setFilePath(saveImageFile(image)); // Implement this method to save the file and return the path
-                        photo.setTakenAt(LocalDateTime.parse(photoInfoDTO.getTakenAt()));
+                        photo.setFilePath(saveImageFile(image));
+                        // 커스텀 포맷터 사용
+                        photo.setTakenAt(LocalDateTime.parse(photoInfoDTO.getTakenAt(), formatter));
                         photo.setLatitude(photoInfoDTO.getLatitude());
                         photo.setLongitude(photoInfoDTO.getLongitude());
                         return photo;
                     } catch (IOException | ImageReadException e) {
-                        throw new RuntimeException("이미지 처리 실패" + e);
+                        throw new RuntimeException("이미지 처리 실패: " + e.getMessage(), e);
                     }
                 })
                 .collect(Collectors.toList());

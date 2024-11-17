@@ -56,6 +56,8 @@ public class Story {
 
     @OneToMany(mappedBy = "story", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
+
+    @Column(name ="preference")
     private int preference;
 
     // Getters and setters

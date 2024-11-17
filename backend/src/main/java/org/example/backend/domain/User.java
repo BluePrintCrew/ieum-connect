@@ -37,9 +37,9 @@ public class User {
 
     // 많은 user들은 자신의 스토리들을 생성할 수 있다.
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Story> Stories = new ArrayList<>();
+    private List<Story> stories = new ArrayList<>();
 
-    // Getters and setters
+    // Getters and setter
     // ...
 
     @PrePersist
