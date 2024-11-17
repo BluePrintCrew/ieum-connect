@@ -60,12 +60,19 @@ public class Story {
 
     // Getters and setters
     // ...
+
     public void setRoute(Route route) {
         this.route = route;
-        if (route.getStory() != this) {
-            route.setStory(this);
+        if (route != null && route.getStory() != this) {
+            route.setStoryOnly(this);
         }
     }
+
+    // 무한 순환 참조를 방지하기 위한 내부 메소드
+    public void setRouteOnly(Route route) {
+        this.route = route;
+    }
+
 
     public void addPhoto(Photo photo) {
         this.photos.add(photo);

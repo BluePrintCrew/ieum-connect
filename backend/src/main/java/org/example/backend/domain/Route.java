@@ -38,13 +38,6 @@ public class Route {
     )
     private List<Hashtag> hashtags = new ArrayList<>();
 
-    public void setStory(Story story) {
-        this.story = story;
-        if (story.getRoute() != this) {
-            story.setRoute(this);
-        }
-    }
-
     public void addRoutePoint(RoutePoint routePoint) {
         this.routePoints.add(routePoint);
         routePoint.setRoute(this);
@@ -53,6 +46,19 @@ public class Route {
     public void addHashtag(Hashtag hashtag) {
         this.hashtags.add(hashtag);
     }
+
+    public void setStory(Story story) {
+        this.story = story;
+        if (story != null && story.getRoute() != this) {
+            story.setRouteOnly(this);
+        }
+    }
+
+    // 무한 순환 참조를 방지하기 위한 내부 메소드
+    public void setStoryOnly(Story story) {
+        this.story = story;
+    }
+
 
 
     // Getters and setters
