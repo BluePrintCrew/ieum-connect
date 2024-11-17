@@ -28,8 +28,8 @@ public class User {
 
     private String nickname;
 
-    // 이미지 url
-    private String profileImageUrl;
+//    // 이미지 url
+//    private String profileImageUrl;
 
     // 생성 시간
     @Column( updatable = false)

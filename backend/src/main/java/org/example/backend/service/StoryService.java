@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -196,10 +197,30 @@ public class StoryService {
                 .collect(Collectors.toList());
     }
 
-    private String saveImageFile(MultipartFile file) {
-        // Implement file saving logic and return the file path
-        // This is just a placeholder
-        return "C:\\Users\\guswp\\Desktop\\ieum-connect-photo" + file.getOriginalFilename();
+    private String saveImageFile(MultipartFile file) throws IOException {
+        String uploadDir = "C:\\Users\\guswp\\Desktop\\ieum-connect-photo";
+        String fileName = file.getOriginalFilename();
+        String filePath = uploadDir + File.separator + fileName;
+
+        try {
+            // 파일 저장
+            File dest = new File(filePath);
+
+            // 같은 이름의 파일이 있을 경우 처리
+            if (dest.exists()) {
+                String fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+                String extension = fileName.substring(fileName.lastIndexOf('.'));
+                fileName = fileNameWithoutExt + "_" + System.currentTimeMillis() + extension;
+                filePath = uploadDir + File.separator + fileName;
+                dest = new File(filePath);
+            }
+
+            file.transferTo(dest);
+
+            return filePath;
+        } catch (IOException e) {
+            throw new IOException("Failed to save file: " + fileName, e);
+        }
     }
 
     public void deleteStory(Long storyId) {
