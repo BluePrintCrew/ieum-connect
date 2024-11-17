@@ -15,7 +15,7 @@ import java.util.List;
 public class Story {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stroy_id")
+    @Column(name = "story_id")
     private Long storyId;
 
     // 관계의 주인
@@ -47,18 +47,15 @@ public class Story {
     @OneToOne(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     private Route route;
 
-    // 좋아요 리스트 추가
-    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL)
-    private List<Like> likes = new ArrayList<>();
-
     // 좋아요 수를 저장하는 필드 추가
     @Column(name = "like_count", columnDefinition = "integer default 0")
     private Integer likeCount = 0;
 
-    // 댓글 리스트 추가
-    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL)
-    private List<Comment> comments = new ArrayList<>();
+    @OneToMany(mappedBy = "story", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "story", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
     private int preference;
 
     // Getters and setters

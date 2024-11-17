@@ -67,35 +67,32 @@ public class StoryService {
     }
     // 선호도 추가는 추후에 진행
     @Transactional
-    public Story createStory(User user, String title, String memo, int preference,Story.Visibility visibility, List<String> hashtags, List<ResponseStoryDto.RoutePointDTO> routePointDTOS, List<MultipartFile> images) throws IOException {
+    public Story createStory(User user, String title, String memo, int preference, Story.Visibility visibility, List<String> hashtags, List<ResponseStoryDto.RoutePointDTO> routePointDTOS, List<MultipartFile> images) throws IOException {
         Story story = new Story();
         story.setUser(user);
         story.setTitle(title);
         story.setDescription(memo);
-        story.setVisibility(visibility); // default를 private로 일단 두는게 좋을 것 같다.
+        story.setVisibility(visibility);
         story.setPreference(preference);
 
-        //route 생성
         Route route = new Route();
         route.setName(title);
 
-        route.setStory(story);
-        story.setRoute(route); // 여기서 story route설정.
+        // 양방향 관계 설정
+        story.setRoute(route);
 
-        // 4. 먼저 Story 저장 (Route는 cascade로 저장됨)
-        story = storyRepository.save(story);
-        
-        List<RoutePoint> routePoints = createRoutePoints(routePointDTOS, route); // routePoint로 저장
-        route.setRoutePoints(routePoints); // route가 갖는 루트 포인트들
+        List<RoutePoint> routePoints = createRoutePoints(routePointDTOS, route);
+        route.getRoutePoints().addAll(routePoints);
 
-        List<Photo> photos = createPhotos(images, story); // 각 image 들을 정리하고 이들을 스토리에 투기
-        story.setPhotos(photos);
+        if (images != null && !images.isEmpty()) {
+            List<Photo> photos = createPhotos(images, story);
+            photos.forEach(story::addPhoto);
+        }
 
-        List<Hashtag> hashtagEntities = createHashtags(hashtags); // 각 달린 해시 테그들을 설정.
-        route.setHashtags(hashtagEntities);
+        List<Hashtag> hashtagEntities = createHashtags(hashtags);
+        route.getHashtags().addAll(hashtagEntities);
 
-        story = storyRepository.save(story);
-        return story;
+        return storyRepository.save(story);
     }
 
     @Transactional(readOnly = true)

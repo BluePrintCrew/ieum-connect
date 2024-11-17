@@ -18,7 +18,7 @@ public class Route {
     private Long routeId;
 
     // 경로와 스토리는 일대일 대응
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "story_id", unique = true)
     private Story story;
 
