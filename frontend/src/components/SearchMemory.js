@@ -56,26 +56,29 @@ const SearchMemory = () => {
     setIsLoading(true);
     setErrorMessage('');
     try {
+      console.log('검색 요청 시작:', { query, page, filterOption });
       const response = await axiosInstance.get('/api/stories/search', {
         params: {
-          hashtag: encodeURIComponent(query),
+          hashtag: query, // 인코딩 제거
           page: page,
           size: RESULTS_PER_PAGE,
           sort: filterOption === '추천순' ? 'likeCount' : 'createdAt',
           direction: 'desc',
         },
       });
+      console.log('검색 요청 성공:', response.data);
       const data = response.data;
       setTotalPages(data.totalPages);
       setSearchResults(data.content || []); // 데이터가 없을 경우 빈 배열로 설정
       setCurrentPage(page);
     } catch (error) {
       setErrorMessage('검색 결과를 가져오는 데 실패했습니다. 다시 시도해주세요.');
-      console.error('검색 결과를 가져오는 데 실패했습니다:', error);
+      console.error('검색 요청 중 오류 발생:', error);
     } finally {
       setIsLoading(false);
     }
   };
+   
 
   const handlePageChange = (direction) => {
     if (direction === 'prev' && currentPage > 0) {
