@@ -3,15 +3,16 @@ import '../Mypage.css';
 import { useNavigate } from 'react-router-dom';
 import FooterNav from './Footernav';
 import axios from 'axios';
-// AuthContext를 통해 로그인된 사용자 정보 가져오기
-// import { AuthContext } from '../AuthContext';
+
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 const MyPage = () => {
   const navigate = useNavigate();
-  
-  // AuthContext에서 가져오는 부분을 주석 처리
-  // const { user } = useContext(AuthContext);
-  // const userId = user?.userId;
 
   // 임시로 userId와 username을 직접 설정
   const userId = 1; // 예시 ID
@@ -30,7 +31,7 @@ const MyPage = () => {
   // 나의 추억 모음 데이터 가져오기
   const fetchMyStories = async () => {
     try {
-      const response = await axios.get(`/api/stories/member/${userId}`, {
+      const response = await axiosInstance.get(`/api/stories/user/${userId}`, {
         params: {
           page: myStoriesPage,
           size: PAGE_SIZE,
@@ -46,7 +47,7 @@ const MyPage = () => {
   // 좋아요 한 스토리 데이터 가져오기
   const fetchLikedStories = async () => {
     try {
-      const response = await axios.get(`/api/likes/member/${userId}`, {
+      const response = await axiosInstance.get(`/api/stories/liked/user/${userId}`, {
         params: {
           page: likedStoriesPage,
           size: PAGE_SIZE,
@@ -60,28 +61,22 @@ const MyPage = () => {
   };
 
   useEffect(() => {
-    if (userId) {
-      fetchMyStories();
-      fetchLikedStories();
-    }
+    fetchMyStories();
+    fetchLikedStories();
   }, [userId]);
 
   useEffect(() => {
-    if (userId) {
-      fetchMyStories();
-    }
+    fetchMyStories();
   }, [myStoriesPage]);
 
   useEffect(() => {
-    if (userId) {
-      fetchLikedStories();
-    }
+    fetchLikedStories();
   }, [likedStoriesPage]);
 
   const handleDeleteStory = async (storyId) => {
     if (window.confirm('정말로 이 스토리를 삭제하시겠습니까?')) {
       try {
-        await axios.delete(`/api/stories/${storyId}`);
+        await axiosInstance.delete(`/api/stories/${storyId}`);
         setMyStories((prevStories) =>
           prevStories.filter((story) => story.storyId !== storyId)
         );
