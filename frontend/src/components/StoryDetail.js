@@ -20,6 +20,7 @@ const StoryDetail = () => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [liked, setLiked] = useState(false);
+  const [likeId, setLikeId] = useState(null); // likeId 저장
   const [likes, setLikes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,7 +41,14 @@ const StoryDetail = () => {
           setStory(storyData);
           setLikes(storyData.likeCount);
           setComments(storyData.comments || []);
-          setLiked(storyData.likedByUser); // 사용자에 따라 좋아요 여부
+          setLiked(storyData.likedByUser);
+
+          if (storyData.likedByUser) {
+            const likeResponse = await axiosInstance.get(`/api/likes/story/${storyId}`);
+            if (likeResponse.status === 200) {
+              setLikeId(likeResponse.data.likeId); // likeId 설정
+            }
+          }
         } else {
           setError('해당 스토리를 찾을 수 없습니다.');
         }
@@ -65,16 +73,18 @@ const StoryDetail = () => {
         if (response.status === 200) {
           setLikes((prevLikes) => prevLikes + 1);
           setLiked(true);
+          setLikeId(response.data.likeId); // likeId 설정
         }
       } else {
-        const response = await axiosInstance.delete(`/api/likes/story/${storyId}`, {
-          data: {
-            userId: 1,
-          },
-        });
-        if (response.status === 200) {
-          setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
-          setLiked(false);
+        if (likeId) {
+          const response = await axiosInstance.delete(`/api/likes/${likeId}`);
+          if (response.status === 200) {
+            setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
+            setLiked(false);
+            setLikeId(null); // 좋아요 취소 후 likeId 초기화
+          }
+        } else {
+          setError('좋아요 ID를 찾을 수 없습니다.');
         }
       }
     } catch (error) {
