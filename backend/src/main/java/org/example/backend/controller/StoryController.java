@@ -43,34 +43,34 @@ public class StoryController {
     }
 
 
-//    // CREATE
-//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @Operation(summary = "스토리 생성", description = "storyinfo, images 라는 두 종류로 묶어야함(MUltipart)")
-//    public ResponseEntity<?> createStory(
-//            @RequestPart("storyInfo") ResponseStoryDto.CreateStoryRequest request, // - story info part
-//            @RequestPart("images") List<MultipartFile> images) { // image 관련 파트
-//        try {
-//            // 나중에 실제 유저 인증에 대한 로직이 들어가야함
-//            User tempUser = new User();
-//            tempUser.setUserId(1L);
-//
-//            Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
-//                    request.getPreference(), request.getVisibility(),request.getHashtags(),request.getRoutePoints(), images);
-//
-//            ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
-//            response.setStatus("success");
-//            response.setMessage("스토리가 성공적으로 저장되었습니다.");
-//            response.setSavedStoryId(savedStory.getStoryId());
-//            response.setCreatedAt(ZonedDateTime.now());
-//
-//            return ResponseEntity.ok(response);
-//        } catch (IOException e) {
-//            ResponseStoryDto.ErrorResponse errorResponse = new ResponseStoryDto.ErrorResponse("error", e.getMessage());
-//            errorResponse.setStatus("error");
-//            errorResponse.setMessage("스토리 저장 중 오류가 발생했습니다: " + e.getMessage());
-//            return ResponseEntity.badRequest().body(errorResponse);
-//        }
-//    }
+    // CREATE
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "스토리 생성", description = "storyinfo, images 라는 두 종류로 묶어야함(MUltipart)")
+    public ResponseEntity<?> createStory(
+            @RequestPart("storyInfo") ResponseStoryDto.CreateStoryRequest request, // - story info part
+            @RequestPart("images") List<MultipartFile> images) { // image 관련 파트
+        try {
+            // 나중에 실제 유저 인증에 대한 로직이 들어가야함
+            User tempUser = new User();
+            tempUser.setUserId(1L);
+
+            Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
+                    request.getPreference(), request.getVisibility(),request.getHashtags(),request.getRoutePoints(), images);
+
+            ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
+            response.setStatus("success");
+            response.setMessage("스토리가 성공적으로 저장되었습니다.");
+            response.setSavedStoryId(savedStory.getStoryId());
+            response.setCreatedAt(ZonedDateTime.now());
+
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            ResponseStoryDto.ErrorResponse errorResponse = new ResponseStoryDto.ErrorResponse("error", e.getMessage());
+            errorResponse.setStatus("error");
+            errorResponse.setMessage("스토리 저장 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
 
 
     @PostMapping("/info")
