@@ -13,6 +13,7 @@ import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.dto.StoryDTO;
 import org.example.backend.kakaosearch.KakaoKeywordService;
 import org.example.backend.service.StoryService;
+import org.example.backend.service.UserService;
 import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +37,12 @@ public class StoryController {
 
     private final StoryService storyService;
     private final KakaoKeywordService kakaoKeywordService;
+    private final UserService userService;
 
-    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService) {
+    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService, UserService userService) {
         this.storyService = storyService;
         this.kakaoKeywordService = kakaoKeywordService;
+        this.userService = userService;
     }
 
 
@@ -51,8 +54,11 @@ public class StoryController {
             @RequestPart("images") List<MultipartFile> images) { // image 관련 파트
         try {
             // 나중에 실제 유저 인증에 대한 로직이 들어가야함
-            User tempUser = new User();
-            tempUser.setUserId(1L);
+            User tempUser = userService.findByUserId(request.getUserId());
+            if (tempUser == null) {
+                return ResponseEntity.badRequest()
+                        .body(new ResponseStoryDto.ErrorResponse("error", "User not found"));
+            }
 
             Story savedStory = storyService.createStory(tempUser, request.getTitle(), request.getMemo(),
                     request.getPreference(), request.getVisibility(),request.getHashtags(),request.getRoutePoints(), images);
@@ -79,8 +85,11 @@ public class StoryController {
             @RequestBody ResponseStoryDto.CreateStoryRequest request) {
         try {
             // 나중에 실제 유저 인증에 대한 로직이 들어가야함
-            User tempUser = new User();
-            tempUser.setUserId(1L);
+            User tempUser = userService.findByUserId(request.getUserId());
+            if (tempUser == null) {
+                return ResponseEntity.badRequest()
+                        .body(new ResponseStoryDto.ErrorResponse("error", "User not found"));
+            }
 
             Story savedStory = storyService.createStoryInfo(
                     tempUser,

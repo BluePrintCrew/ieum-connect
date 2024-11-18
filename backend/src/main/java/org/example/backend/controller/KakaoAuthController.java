@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.domain.User;
+import org.example.backend.dto.UserDTO;
 import org.example.backend.service.KakaoLoginService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,9 +20,14 @@ public class KakaoAuthController {
     private final KakaoLoginService kakaoLoginService;
 
     @PostMapping("/kakao")
-    public ResponseEntity<User> kakaoLogin(@RequestBody KakaoLoginRequest request) {
+    public ResponseEntity<UserDTO> kakaoLogin(@RequestBody KakaoLoginRequest request) {
         User user = kakaoLoginService.processKakaoUser(request.getKakaoId(), request.getNickname());
-        return ResponseEntity.ok(user);
+        UserDTO userDTO = UserDTO.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .nickname(user.getNickname())
+                .build();
+        return ResponseEntity.ok(userDTO);
     }
 }
 

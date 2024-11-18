@@ -15,6 +15,7 @@ public class ResponseStoryDto {
 
     @Data
     public static class CreateStoryRequest {
+        private Long userId;
         private String title;
         private String memo;
         private int preference;
