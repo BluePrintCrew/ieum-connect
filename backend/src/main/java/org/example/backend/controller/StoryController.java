@@ -150,18 +150,18 @@ public class StoryController {
         return ResponseEntity.ok(storyDTOs);
     }
 
-//    @Operation(summary = "storyID 에 해당하는 image 조회")
-//    @GetMapping("/{storyId}/images")
-//    public ResponseEntity<List<StoryDTO.PhotoDTO>> getStoryImages(@PathVariable("storyId") Long storyId) {
-//        Story story = storyService.getStoryById(storyId);
-//        if (story == null) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        List<StoryDTO.PhotoDTO> photoDTOs = story.getPhotos().stream()
-//                .map(p -> new StoryDTO.PhotoDTO(p.getPhotoId(), p.getFilePath(), p.getTakenAt(), p.getLatitude(), p.getLongitude()))
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(photoDTOs);
-//    }
+    @Operation(summary = "storyID 에 해당하는 image 조회")
+    @GetMapping("/{storyId}/images")
+    public ResponseEntity<List<StoryDTO.PhotoDTO>> getStoryImages(@PathVariable("storyId") Long storyId) {
+        Story story = storyService.getStoryById(storyId);
+        if (story == null) {
+            return ResponseEntity.notFound().build();
+        }
+        List<StoryDTO.PhotoDTO> photoDTOs = story.getPhotos().stream()
+                .map(p -> new StoryDTO.PhotoDTO(p.getPhotoId(), p.getFilePath(), p.getTakenAt(), p.getLatitude(), p.getLongitude()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(photoDTOs);
+    }
 
     @PreAuthorize("permitAll()")
     @GetMapping("/search")

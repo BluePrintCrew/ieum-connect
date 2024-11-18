@@ -17,14 +17,14 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<?> addComment(@RequestBody CommentDto.CommentCreateDto commentDto) {
-        Comment comment = commentService.addComment(commentDto);
+    public ResponseEntity<CommentDto> addComment(@RequestBody CommentDto.CommentCreateDto commentDto) {
+        CommentDto comment = commentService.addComment(commentDto);
         return ResponseEntity.ok(comment);
     }
 
     @GetMapping("/story/{storyId}")
-    public ResponseEntity<?> getCommentsByStory(@PathVariable Long storyId) {
-        List<Comment> comments = commentService.getCommentsByStory(storyId);
+    public ResponseEntity<List<CommentDto>> getCommentsByStory(@PathVariable Long storyId) {
+        List<CommentDto> comments = commentService.getCommentsByStory(storyId);
         return ResponseEntity.ok(comments);
     }
 }

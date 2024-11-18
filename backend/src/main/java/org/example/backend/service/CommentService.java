@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +22,7 @@ public class CommentService {
     private final StoryRepository storyRepository;
     private final UserRepository userRepository;
 
-    public Comment addComment(CommentDto.CommentCreateDto commentDto) {
+    public CommentDto addComment(CommentDto.CommentCreateDto commentDto) {
         Story story = storyRepository.findById(commentDto.getStoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Story not found"));
         User user = userRepository.findById(commentDto.getUserId())
@@ -33,12 +34,26 @@ public class CommentService {
         comment.setContent(commentDto.getContent());
         comment.setCreatedAt(LocalDateTime.now());
 
-        return commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
+
+        // Entity를 DTO로 변환
+        return new CommentDto(
+                savedComment.getStory().getStoryId(),
+                savedComment.getUser().getUserId(),
+                savedComment.getContent(),
+                savedComment.getCreatedAt()
+        );
     }
 
-    public List<Comment> getCommentsByStory(Long storyId) {
-        return commentRepository.findByStoryStoryId(storyId);
+    public List<CommentDto> getCommentsByStory(Long storyId) {
+        List<Comment> comments = commentRepository.findByStoryStoryId(storyId);
+        return comments.stream()
+                .map(comment -> new CommentDto(
+                        comment.getStory().getStoryId(),
+                        comment.getUser().getUserId(),
+                        comment.getContent(),
+                        comment.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
     }
-
-    // 기타 CRUD 작업
 }
