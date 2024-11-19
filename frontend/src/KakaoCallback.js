@@ -29,6 +29,7 @@ const KakaoCallback = () => {
           console.log('로컬 스토리지에 저장된 사용자 정보:', savedUser);
 
           // 홈 화면으로 리디렉트는 일단 보류
+          navigate('/');
         })
         .catch(error => {
           console.error('카카오 로그인 실패:', error);
