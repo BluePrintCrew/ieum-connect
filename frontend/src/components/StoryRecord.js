@@ -27,6 +27,7 @@ const StoryRecord = () => {
   const navigate = useNavigate();
   const isUpdatingKeywords = useRef(false);
   const detectedLabelsSet = useRef(new Set());
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     const loadModel = async () => {
@@ -40,7 +41,15 @@ const StoryRecord = () => {
     };
     loadModel();
   }, []);
-
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('로컬 스토리지에서 불러온 유저 정보:', user);
+    } else {
+      console.log('로컬 스토리지에 사용자 정보가 없습니다.');
+    }
+  }, []);
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files).filter(
       (file) => file.type === 'image/jpeg' || file.type === 'image/png'
@@ -128,7 +137,7 @@ const StoryRecord = () => {
   const recommendKeywordsFromChatGPT = async () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
-    await recommendKeywords("이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어, '자연', '여행', '풍경'과 같은 키워드를 추천해 주세요.");
+    await recommendKeywords("이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어, 자연, 여행, 인스타그램, 휴식스타그램, 달콤한휴식과 같은 키워드를 추천해 주세요.");
     isUpdatingKeywords.current = false;
   };
 
@@ -212,9 +221,10 @@ const StoryRecord = () => {
       alert('경로에 최소 하나 이상의 스팟이 필요합니다.');
       return;
     }
-
+    const user = JSON.parse(localStorage.getItem('user'));
     const routePoints = convertMarkersToRoutePoints();
     const storyInfo = {
+      userId: parseInt(user.userId), // 사용자 ID
       title: title.trim(),
       memo: memo.trim(),
       preference,
@@ -242,7 +252,7 @@ const StoryRecord = () => {
         // 이미지를 저장된 스토리에 추가
         for (const file of selectedFiles) {
           const formData = new FormData();
-          formData.append('image/jpeg', file);
+          formData.append('image', file);
 
           const imageResponse = await axios.post(
             `http://localhost:8080/api/stories/${savedStoryId}/images`,
