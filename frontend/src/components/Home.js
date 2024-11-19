@@ -10,6 +10,17 @@ const Home = () => {
   const [bestStories, setBestStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 사용자 정보 로드 및 콘솔 출력
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('로컬 스토리지에서 불러온 유저 정보:', user);
+    } else {
+      console.log('로컬 스토리지에 사용자 정보가 없습니다.');
+    }
+  }, []);
+
   // JSON 파일에서 데이터를 불러오는 함수
   useEffect(() => {
     const fetchBestStories = async () => {
