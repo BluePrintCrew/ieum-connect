@@ -362,6 +362,7 @@ public class StoryController {
             dto.setDescription(story.getDescription());
             dto.setCreatedAt(story.getCreatedAt());
             dto.setVisibility(story.getVisibility());
+            dto.setPreference(story.getPreference());
 
             // User 정보 설정
             StoryDTO.UserDTO userDTO = new StoryDTO.UserDTO();

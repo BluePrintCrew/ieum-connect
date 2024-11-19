@@ -23,6 +23,7 @@ public class StoryDTO {
         private Story.Visibility visibility;
         private UserDTO user;
         private RouteDTO route;
+        private int preference;
         private List<PhotoDTO> photos;
         private List<String> hashtags;
         // 좋아요 수 필드 추가

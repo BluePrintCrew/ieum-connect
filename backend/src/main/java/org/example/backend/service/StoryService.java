@@ -1,5 +1,6 @@
 package org.example.backend.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.apache.commons.imaging.ImageReadException;
 import org.example.backend.domain.*;
 import org.example.backend.dto.PhotoInfoDTO;
@@ -34,7 +35,8 @@ public class StoryService {
     private final HashtagRepository hashtagRepository;
     private final PhotoService photoService;
     private final KakaoAddressService kakaoAddressService; // 주소 생성
-
+    @Value("${upload.path}")
+    private String uploadPath;
     public StoryService(StoryRepository storyRepository, RouteRepository routeRepository,
                         RoutePointRepository routePointRepository, PhotoRepository photoRepository,
                         HashtagRepository hashtagRepository, PhotoService photoService,KakaoAddressService kakaoAddressService) {
@@ -262,9 +264,12 @@ public class StoryService {
     }
 
     private String saveImageFile(MultipartFile file) throws IOException {
-        String uploadDir = "C:\\Users\\guswp\\Desktop\\ieum-connect-photo";
+
+
+
+
         String fileName = file.getOriginalFilename();
-        String filePath = uploadDir + File.separator + fileName;
+        String filePath = uploadPath + File.separator + fileName;
 
         try {
             // 파일 저장
@@ -275,7 +280,7 @@ public class StoryService {
                 String fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
                 String extension = fileName.substring(fileName.lastIndexOf('.'));
                 fileName = fileNameWithoutExt + "_" + System.currentTimeMillis() + extension;
-                filePath = uploadDir + File.separator + fileName;
+                filePath = uploadPath + File.separator + fileName;
                 dest = new File(filePath);
             }
 
