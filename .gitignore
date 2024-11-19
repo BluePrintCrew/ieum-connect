@@ -25,3 +25,14 @@ yarn-error.log*
 frontend/.env
 frontend/node_modules/
 frontend/build/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# dependencies
+**/node_modules/
+**/.cache/
