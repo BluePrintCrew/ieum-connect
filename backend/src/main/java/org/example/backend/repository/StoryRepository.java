@@ -2,6 +2,7 @@ package org.example.backend.repository;
 
 import jakarta.persistence.EntityManager;
 import org.example.backend.domain.Story;
+import org.example.backend.domain.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -41,5 +42,7 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
             Story.Visibility visibility,
             Pageable pageable
     );
+
+    List<Story> findByLikesUser(User user);
 }
 

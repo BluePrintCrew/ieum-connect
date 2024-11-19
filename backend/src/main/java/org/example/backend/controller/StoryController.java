@@ -12,6 +12,7 @@ import org.example.backend.domain.User;
 import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.dto.StoryDTO;
 import org.example.backend.kakaosearch.KakaoKeywordService;
+import org.example.backend.repository.StoryRepository;
 import org.example.backend.service.StoryService;
 import org.example.backend.service.UserService;
 import org.springframework.data.domain.*;
@@ -38,11 +39,13 @@ public class StoryController {
     private final StoryService storyService;
     private final KakaoKeywordService kakaoKeywordService;
     private final UserService userService;
+    private final StoryRepository storyRepository;
 
-    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService, UserService userService) {
+    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService, UserService userService,StoryRepository storyRepository) {
         this.storyService = storyService;
         this.kakaoKeywordService = kakaoKeywordService;
         this.userService = userService;
+        this.storyRepository =storyRepository;
     }
 
 
@@ -159,6 +162,25 @@ public class StoryController {
         return ResponseEntity.ok(storyDTOs);
     }
 
+    @GetMapping("/likes/{userId}")
+    @Operation(summary = "유저가 좋아요를 한 모든스토리 조회", description = "마이페이지에서 자신의 스토리 조회")
+    public ResponseEntity<List<StoryDTO.Response>> getStoriesLikedByUser(@PathVariable("userId") Long userId) {
+        User user = userService.findByUserId(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Story> likedStories = storyRepository.findByLikesUser(user);
+        if (likedStories.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        List<StoryDTO.Response> storyDTOs = likedStories.stream()
+                .map(this::convertToDTOWithoutImages)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(storyDTOs);
+    }
     @Operation(summary = "storyID 에 해당하는 image 조회")
     @GetMapping("/{storyId}/images")
     public ResponseEntity<List<StoryDTO.PhotoDTO>> getStoryImages(@PathVariable("storyId") Long storyId) {
@@ -171,6 +193,7 @@ public class StoryController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(photoDTOs);
     }
+
 
     @PreAuthorize("permitAll()")
     @GetMapping("/search")
