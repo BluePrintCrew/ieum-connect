@@ -46,8 +46,8 @@ const StoryRecord = () => {
       (file) => file.type === 'image/jpeg' || file.type === 'image/png'
     );
     if (files.length > 0) {
-      setSelectedFiles([...selectedFiles, ...files]);
-      setImagePreviews([...imagePreviews, ...files.map((file) => URL.createObjectURL(file))]);
+      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
+      setImagePreviews((prevPreviews) => [...prevPreviews, ...files.map((file) => URL.createObjectURL(file))]);
       files.forEach((file) => {
         processImage(file);
       });
@@ -175,7 +175,7 @@ const StoryRecord = () => {
 
   const handleHashtagKeyPress = (e) => {
     if (e.key === 'Enter' && hashtagInput.trim() !== '') {
-      setHashtags([...hashtags, hashtagInput.trim()]);
+      setHashtags((prevHashtags) => [...prevHashtags, hashtagInput.trim()]);
       setHashtagInput('');
     }
   };
@@ -183,13 +183,13 @@ const StoryRecord = () => {
   const addRecommendedKeyword = (keyword) => {
     const cleanedKeyword = keyword.replace(/^#+/, '').trim();
     if (!hashtags.includes(cleanedKeyword)) {
-      setHashtags([...hashtags, cleanedKeyword]);
+      setHashtags((prevHashtags) => [...prevHashtags, cleanedKeyword]);
     }
   };
 
   const removeHashtag = (indexToRemove) =>
-    setHashtags(hashtags.filter((_, index) => index !== indexToRemove));
-  const toggleSpotAdding = () => setIsSpotAdding(!isSpotAdding);
+    setHashtags((prevHashtags) => prevHashtags.filter((_, index) => index !== indexToRemove));
+  const toggleSpotAdding = () => setIsSpotAdding((prev) => !prev);
 
   const convertMarkersToRoutePoints = () => {
     return markers.map((marker, index) => ({
@@ -223,19 +223,48 @@ const StoryRecord = () => {
       routePoints,
     };
 
-    const formData = new FormData();
-    formData.append('storyInfo', new Blob([JSON.stringify(storyInfo)], { type: 'application/json' }));
-    selectedFiles.forEach((file) => {
-      formData.append('images', file);
-    });
-
     try {
-      const response = await axios.post('http://localhost:8080/api/stories', formData);
-      if (response.status === 200) {
-        console.log('스토리 생성 성공:', response.data);
+      // 스토리 기본 정보 생성
+      const storyInfoResponse = await axios.post(
+        'http://localhost:8080/api/stories/info',
+        storyInfo,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (storyInfoResponse.status === 200) {
+        console.log('스토리 정보 생성 성공:', storyInfoResponse.data);
+        const savedStoryId = storyInfoResponse.data.savedStoryId;
+
+        // 이미지를 저장된 스토리에 추가
+        for (const file of selectedFiles) {
+          const formData = new FormData();
+          formData.append('image/jpeg', file);
+
+          const imageResponse = await axios.post(
+            `http://localhost:8080/api/stories/${savedStoryId}/images`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+
+          if (imageResponse.status === 200) {
+            console.log('이미지 추가 성공:', imageResponse.data);
+          } else {
+            console.error('예상치 못한 응답:', imageResponse);
+          }
+        }
+
+        // 모든 처리가 성공적으로 완료된 후 홈으로 이동
         navigate('/home');
       } else {
-        console.error('예상치 못한 응답:', response);
+        console.error('예상치 못한 응답:', storyInfoResponse);
       }
     } catch (error) {
       console.error('스토리 제출 중 오류 발생:', error);
@@ -344,6 +373,7 @@ const StoryRecord = () => {
             <button onClick={() => removeHashtag(index)} className="hashtag-remove">
               X
             </button>
+
           </div>
         ))}
       </div>

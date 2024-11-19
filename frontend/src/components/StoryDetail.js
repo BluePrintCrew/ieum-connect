@@ -73,18 +73,17 @@ const StoryDetail = () => {
         if (response.status === 200) {
           setLikes((prevLikes) => prevLikes + 1);
           setLiked(true);
-          setLikeId(response.data.likeId); // likeId 설정
         }
       } else {
-        if (likeId) {
-          const response = await axiosInstance.delete(`/api/likes/${likeId}`);
-          if (response.status === 200) {
-            setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
-            setLiked(false);
-            setLikeId(null); // 좋아요 취소 후 likeId 초기화
-          }
-        } else {
-          setError('좋아요 ID를 찾을 수 없습니다.');
+        const response = await axiosInstance.delete('/api/likes', {
+          params: {
+            userId: 1,
+            storyId: parseInt(storyId),
+          },
+        });
+        if (response.status === 200) {
+          setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
+          setLiked(false);
         }
       }
     } catch (error) {
@@ -92,7 +91,7 @@ const StoryDetail = () => {
       console.error('좋아요 추가/취소에 실패했습니다:', error);
     }
   };
-
+   
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
