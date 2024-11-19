@@ -9,6 +9,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [bestStories, setBestStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [nickname, setNickname] = useState('');
 
   // 사용자 정보 로드 및 콘솔 출력
   useEffect(() => {
@@ -16,6 +17,7 @@ const Home = () => {
     if (userData) {
       const user = JSON.parse(userData);
       console.log('로컬 스토리지에서 불러온 유저 정보:', user);
+      setNickname(user.username || '닉네임');
     } else {
       console.log('로컬 스토리지에 사용자 정보가 없습니다.');
     }
@@ -55,7 +57,7 @@ const Home = () => {
     <div className="home-container">
       {/* 상단: 닉네임과 설정 */}
       <div className="header">
-        <div className="nickname">닉네임</div>
+        <div className="nickname">{nickname}</div>
         <div className="settings-icon" onClick={() => navigate('/settings')}>⚙️ 설정</div>
       </div>
 
