@@ -47,11 +47,13 @@ const StoryDetail = () => {
             })
           );
           const photoResponses = await Promise.all(photoPromises);
-          const photoData = photoResponses.map((res) => {
+          const photoData = photoResponses.map((res, index) => {
+            const { latitude, longitude } = storyData.photos[index];
             return {
-              ...res.data,
               photoUrl: URL.createObjectURL(res.data),
               photoId: res.config.url.split('/').pop(),
+              latitude: parseFloat(latitude),
+              longitude: parseFloat(longitude),
             };
           });
           setPhotos(photoData);
@@ -150,13 +152,15 @@ const StoryDetail = () => {
         {photos && (
           <KakaoMap
             isSpotAdding={false}
-            markers={photos.map((photo) => ({
-              lat: photo.latitude,
-              lng: photo.longitude,
-            }))}
+            markers={photos
+              .filter((photo) => !isNaN(photo.latitude) && !isNaN(photo.longitude))
+              .map((photo) => ({
+                lat: photo.latitude,
+                lng: photo.longitude,
+              }))}
             setMarkers={() => {}}
             center={
-              photos.length > 0
+              photos.length > 0 && !isNaN(photos[0].latitude) && !isNaN(photos[0].longitude)
                 ? { lat: photos[0].latitude, lng: photos[0].longitude }
                 : { lat: 37.283, lng: 127.046 }
             }
