@@ -35,4 +35,4 @@ frontend/build/
 
 # dependencies
 **/node_modules/
-**/.cache/
+**/.cache/*.eslintcache
