@@ -17,10 +17,10 @@ const axiosInstance = axios.create({
 const StoryDetail = () => {
   const { storyId } = useParams();
   const [story, setStory] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [liked, setLiked] = useState(false);
-  const [likeId, setLikeId] = useState(null); // likeId 저장
   const [likes, setLikes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,20 +35,28 @@ const StoryDetail = () => {
         const storyData = response.data;
 
         if (storyData) {
-          if (storyData.photos) {
-            storyData.photos.sort((a, b) => new Date(a.takenAt) - new Date(b.takenAt));
-          }
           setStory(storyData);
           setLikes(storyData.likeCount);
           setComments(storyData.comments || []);
           setLiked(storyData.likedByUser);
-
-          if (storyData.likedByUser) {
-            const likeResponse = await axiosInstance.get(`/api/likes/story/${storyId}`);
-            if (likeResponse.status === 200) {
-              setLikeId(likeResponse.data.likeId); // likeId 설정
-            }
-          }
+          
+          // 스토리의 photoId를 통해 사진 정보를 개별적으로 가져오기
+          const photoPromises = storyData.photos.map((photo) =>
+            axiosInstance.get(`/api/photos/${photo.photoId}`, {
+              responseType: 'blob',
+            })
+          );
+          const photoResponses = await Promise.all(photoPromises);
+          const photoData = photoResponses.map((res, index) => {
+            const { latitude, longitude } = storyData.photos[index];
+            return {
+              photoUrl: URL.createObjectURL(res.data),
+              photoId: res.config.url.split('/').pop(),
+              latitude: parseFloat(latitude),
+              longitude: parseFloat(longitude),
+            };
+          });
+          setPhotos(photoData);
         } else {
           setError('해당 스토리를 찾을 수 없습니다.');
         }
@@ -91,7 +99,7 @@ const StoryDetail = () => {
       console.error('좋아요 추가/취소에 실패했습니다:', error);
     }
   };
-   
+
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
@@ -141,29 +149,31 @@ const StoryDetail = () => {
 
       <div className="story-map">
         <h2>경로 지도</h2>
-        {story.photos && (
+        {photos && (
           <KakaoMap
             isSpotAdding={false}
-            markers={story.photos.map((photo) => ({
-              lat: photo.latitude,
-              lng: photo.longitude,
-            }))}
+            markers={photos
+              .filter((photo) => !isNaN(photo.latitude) && !isNaN(photo.longitude))
+              .map((photo) => ({
+                lat: photo.latitude,
+                lng: photo.longitude,
+              }))}
             setMarkers={() => {}}
             center={
-              story.photos.length > 0
-                ? { lat: story.photos[0].latitude, lng: story.photos[0].longitude }
+              photos.length > 0 && !isNaN(photos[0].latitude) && !isNaN(photos[0].longitude)
+                ? { lat: photos[0].latitude, lng: photos[0].longitude }
                 : { lat: 37.283, lng: 127.046 }
             }
           />
         )}
       </div>
 
-      {story.photos && (
+      {photos && (
         <div className="story-photos">
           <Slider {...sliderSettings}>
-            {story.photos.map((photo) => (
+            {photos.map((photo) => (
               <div key={photo.photoId} className="photo-item">
-                <img src={`http://localhost:8080${photo.filePath}`} alt="스토리 사진" />
+                <img src={photo.photoUrl} alt="스토리 사진" />
               </div>
             ))}
           </Slider>

@@ -14,12 +14,18 @@ const KakaoCallback = () => {
     if (code) {
       console.log('인증 코드:', code);
 
+      // 인증 코드의 마지막 3글자를 nickname과 username으로 임시 사용합니다.
+      const codeSuffix = code.substring(code.length - 3);
+      const nickname = `사용자_${codeSuffix}`;
+      const username = `user_${codeSuffix}`;
+
       // 인증 코드를 백엔드로 전송하여 액세스 토큰과 사용자 정보를 요청합니다.
       axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/kakao`, { code })
         .then(response => {
           // 백엔드에서 반환된 로그인 성공 정보를 처리
           console.log('백엔드 응답 데이터:', response.data);
-          const { userId, nickname, username } = response.data;
+          // 응답 데이터에서 userId를 추출합니다.
+          const { userId } = response.data;
 
           // 로컬 스토리지에 사용자 정보 저장
           localStorage.setItem('user', JSON.stringify({ userId, nickname, username }));
@@ -29,7 +35,6 @@ const KakaoCallback = () => {
           console.log('로컬 스토리지에 저장된 사용자 정보:', savedUser);
 
           // 홈 화면으로 리디렉트는 일단 보류
-          navigate('/');
         })
         .catch(error => {
           console.error('카카오 로그인 실패:', error);
