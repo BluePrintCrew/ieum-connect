@@ -12,7 +12,11 @@ import org.example.backend.domain.User;
 import org.example.backend.dto.ResponseStoryDto;
 import org.example.backend.dto.StoryDTO;
 import org.example.backend.kakaosearch.KakaoKeywordService;
+import org.example.backend.repository.LikeRepository;
 import org.example.backend.repository.StoryRepository;
+import org.example.backend.repository.UserRepository;
+import org.example.backend.service.FollowService;
+import org.example.backend.service.LikeService;
 import org.example.backend.service.StoryService;
 import org.example.backend.service.UserService;
 import org.springframework.data.domain.*;
@@ -40,12 +44,20 @@ public class StoryController {
     private final KakaoKeywordService kakaoKeywordService;
     private final UserService userService;
     private final StoryRepository storyRepository;
+    private final FollowService followService;
 
-    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService, UserService userService,StoryRepository storyRepository) {
+    private final LikeService likeService;
+
+    public StoryController(StoryService storyService, KakaoKeywordService kakaoKeywordService,
+                           UserService userService,StoryRepository storyRepository,
+                           FollowService followService,LikeRepository likeRepository,LikeService likeService,
+                           UserRepository userRepository) {
         this.storyService = storyService;
         this.kakaoKeywordService = kakaoKeywordService;
         this.userService = userService;
         this.storyRepository =storyRepository;
+        this.followService = followService;
+        this.likeService = likeService;
     }
 
 
@@ -141,25 +153,31 @@ public class StoryController {
     // READ
     @GetMapping("/{storyId}")
     @Operation(summary = "story id를 통한 조회, 사용자가 게시글을 눌렀을때!")
-    public ResponseEntity<StoryDTO.Response> getStory(@PathVariable Long storyId) {
+    public ResponseEntity<StoryDTO.Response> getStory(
+            @PathVariable Long storyId,
+            @RequestParam(required = false) Long currentUserId
+    ) {
         Story story = storyService.getStoryById(storyId);
         if (story == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(convertToDTO(story));
+        return ResponseEntity.ok(convertToDTO(story,currentUserId));
     }
 
     @GetMapping("/member/{userId}")
     @Operation(summary = "userId를 통한 모든스토리 조회", description = "마이페이지에서 자신의 스토리 조회 !! 이미지 없음 !!")
-    public ResponseEntity<List<StoryDTO.Response>> getStoriesByUserId(@PathVariable("userId") Long userId) {
+    public ResponseEntity<List<StoryDTO.Response>> getStoriesByUserId(
+            @PathVariable("userId") Long userId,
+             @RequestParam(required = false) Long currentUserId
+            ) {
         List<Story> stories = storyService.getStoryByUserId(userId);
         if (stories.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        List<StoryDTO.Response> storyDTOs = stories.stream()
-                .map(this::convertToDTOWithoutImages)
+        List<StoryDTO.Response> responses = stories.stream()
+                .map(story -> convertToDTO(story, currentUserId))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(storyDTOs);
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/likes/{userId}")
@@ -310,11 +328,12 @@ public class StoryController {
             description = "페이징 처리된 스토리 목록을 좋아요 수 기준으로 내림차순 정렬하여 반환")
     public ResponseEntity<Page<StoryDTO.Response>> getTopStories(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long currentUserId) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Story> stories = storyService.getStoriesByLikes(pageable);
-        Page<StoryDTO.Response> storyDTOs = stories.map(this::convertToDTO);
+        Page<StoryDTO.Response> storyDTOs = stories.map(story -> convertToDTO(story, currentUserId));
 
         return storyDTOs.isEmpty() ?
                 ResponseEntity.noContent().build() :
@@ -326,11 +345,12 @@ public class StoryController {
             description = "페이징 처리된 스토리 목록을 생성 시간 기준으로 내림차순 정렬하여 반환")
     public ResponseEntity<Page<StoryDTO.Response>> getRecentStories(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long currentUserId) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Story> stories = storyService.getStoriesByTime(pageable);
-        Page<StoryDTO.Response> storyDTOs = stories.map(this::convertToDTO);
+        Page<StoryDTO.Response> storyDTOs = stories.map(story -> convertToDTO(story, currentUserId));
 
         return storyDTOs.isEmpty() ?
                 ResponseEntity.noContent().build() :
@@ -378,7 +398,7 @@ public class StoryController {
         return dto;
     }
 
-        private StoryDTO.Response convertToDTO(Story story) {
+        private StoryDTO.Response convertToDTO(Story story, Long currentUserId) {
             StoryDTO.Response dto = new StoryDTO.Response();
             dto.setStoryId(story.getStoryId());
             dto.setTitle(story.getTitle());
@@ -421,6 +441,17 @@ public class StoryController {
             // 좋아요 수 설정
             dto.setLikeCount(story.getLikeCount());
 
+            boolean isFollowing = false;
+            if (currentUserId != null && !currentUserId.equals(story.getUser().getUserId())) {
+                isFollowing = followService.isFollowing(currentUserId, story.getUser().getUserId());
+            }
+            dto.setFollowing(isFollowing);
+
+            boolean isLiked = false;
+            if (currentUserId != null) {
+                isLiked = likeService.isLiked(currentUserId, story.getStoryId());  // LikeService의 메서드 활용
+            }
+            dto.setLiked(isLiked);
             // 댓글 정보 설정
             List<StoryDTO.CommentDTO> commentDTOs = story.getComments().stream()
                     .map(comment -> {

@@ -34,12 +34,13 @@ public class StoryService {
     private final PhotoRepository photoRepository;
     private final HashtagRepository hashtagRepository;
     private final PhotoService photoService;
+    private final FollowService followService;
     private final KakaoAddressService kakaoAddressService; // 주소 생성
     @Value("${upload.path}")
     private String uploadPath;
     public StoryService(StoryRepository storyRepository, RouteRepository routeRepository,
                         RoutePointRepository routePointRepository, PhotoRepository photoRepository,
-                        HashtagRepository hashtagRepository, PhotoService photoService,KakaoAddressService kakaoAddressService) {
+                        HashtagRepository hashtagRepository, PhotoService photoService,KakaoAddressService kakaoAddressService,FollowService followService) {
         this.storyRepository = storyRepository;
         this.routeRepository = routeRepository;
         this.routePointRepository = routePointRepository;
@@ -47,6 +48,7 @@ public class StoryService {
         this.hashtagRepository = hashtagRepository;
         this.photoService = photoService;
         this.kakaoAddressService = kakaoAddressService;
+        this.followService = followService;
     }
 
     @Transactional

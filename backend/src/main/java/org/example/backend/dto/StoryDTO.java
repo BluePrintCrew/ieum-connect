@@ -26,6 +26,8 @@ public class StoryDTO {
         private int preference;
         private List<PhotoDTO> photos;
         private List<String> hashtags;
+        private boolean isFollowing; // 팔로우 상태를 나타내는 필드 추가
+        private boolean isLiked;      // 좋아요 상태 추가
         // 좋아요 수 필드 추가
         private int likeCount;
         // 댓글 목록 필드 추가

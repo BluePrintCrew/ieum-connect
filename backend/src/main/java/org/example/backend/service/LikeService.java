@@ -24,6 +24,9 @@ public class LikeService {
     private final StoryRepository storyRepository;
     private final UserRepository userRepository;
 
+    public boolean isLiked(Long userId, Long storyId) {
+        return likeRepository.findByUser_UserIdAndStory_StoryId(userId, storyId).isPresent();
+    }
     @Transactional
     public LikeDto addLike(LikeDto.LikeCreateDto likeDto) {
         Story story = storyRepository.findById(likeDto.getStoryId())

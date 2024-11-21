@@ -28,8 +28,20 @@ public class User {
 
     private String nickname;
 
-//    // 이미지 url
-//    private String profileImageUrl;
+    @OneToMany(mappedBy = "follower")
+    private List<Follow> followings = new ArrayList<>();  // 내가 팔로우하는 사람들
+
+    @OneToMany(mappedBy = "following")
+    private List<Follow> followers = new ArrayList<>();   // 나를 팔로우하는 사람들
+
+    // 팔로워 수와 팔로잉 수를 쉽게 가져오기 위한 메서드
+    public int getFollowersCount() {
+        return followers.size();
+    }
+
+    public int getFollowingsCount() {
+        return followings.size();
+    }
 
     // 생성 시간
     @Column( updatable = false)

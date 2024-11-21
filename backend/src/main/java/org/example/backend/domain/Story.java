@@ -39,6 +39,10 @@ public class Story {
     @Enumerated(EnumType.STRING)
     private Visibility visibility;
 
+    //
+    @Enumerated(EnumType.STRING)
+    private PlanState planState;
+
     // 사진과 story는 일대 다
     @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Photo> photos = new ArrayList<>();
@@ -89,5 +93,8 @@ public class Story {
     // Friend 기능은 추후에 결정
     public enum Visibility {
         PUBLIC, PRIVATE, FRIENDS_ONLY
+    }
+    public enum PlanState{
+        PUBLISH, PLANNED
     }
 }
