@@ -5,6 +5,9 @@ import axios from 'axios';
 import FooterNav from './Footernav';
 import StoryItem from './StoryItem';
 
+
+
+ 
 // Axios 기본 인스턴스를 생성하여 공통 설정
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8080', // 백엔드 서버의 기본 URL
@@ -23,8 +26,19 @@ const SearchMemory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const RESULTS_PER_PAGE = 10;
 
+const [nickname, setNickname] = useState('');
+  const RESULTS_PER_PAGE = 10;
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log('로컬 스토리지에서 불러온 유저 정보:', user);
+      setNickname(user.username || '닉네임');
+    } else {
+      console.log('로컬 스토리지에 사용자 정보가 없습니다.');
+    }
+  }, []);
   // URL에서 검색어 추출 및 상태 업데이트
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -91,9 +105,11 @@ const SearchMemory = () => {
   return (
     <div className="home-container">
       <div className="header">
-        <div className="nickname">닉네임</div>
+        <div className="nickname">{nickname}</div>
+        
         <div className="settings-icon" onClick={() => navigate('/settings')}>⚙️ 설정</div>
       </div>
+      
 
       <div className="search-bar">
         <input
@@ -144,7 +160,10 @@ const SearchMemory = () => {
             />
           ))
         ) : (
-          <div className="no-results-message">검색 결과가 없습니다.</div>
+          <div className="no-results-message">
+          <img src="images/noresult.png" alt="No results" />
+          검색 결과가 없습니다.
+        </div> 
         )}
       </div>
 

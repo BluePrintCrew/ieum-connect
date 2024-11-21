@@ -10,6 +10,7 @@ import MyPage from './components/Mypage.js';
 import FooterNav from './components/Footernav';
 import Detail from './components/StoryDetail.js';
 import './App.css'; // 애니메이션 관련 CSS 포함
+import MemoryPlanSelect from './components/MemoryPlanSelect.js';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -22,7 +23,8 @@ function AnimatedRoutes() {
           <Route path="/login" element={<LoginPage />} /> 
           <Route path="/record" element={<><StoryRecord /></>} />
           <Route path="/search" element={<><SearchMemory /></>} />
-          <Route path="/mypage" element={<><MyPage /></>} /> 
+          <Route path="/mypage" element={<><MyPage /></>} />
+          <Route path="/memory-plan/select" element={<MemoryPlanSelect />} /> 
           <Route path="/story/detail/:storyId" element={<><Detail /><FooterNav /></>} /> 
           <Route path="/oauth/kakao/callback" element={<KakaoCallback />} />
         </Routes>

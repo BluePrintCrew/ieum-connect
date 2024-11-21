@@ -16,6 +16,7 @@ const axiosInstance = axios.create({
 
 const StoryDetail = () => {
   const { storyId } = useParams();
+  const userId = parseInt(JSON.parse(localStorage.getItem('user'))?.userId);
   const [story, setStory] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [comments, setComments] = useState([]);
@@ -73,19 +74,22 @@ const StoryDetail = () => {
 
   const handleLike = async () => {
     try {
+      setError('');
+      // 사용자가 좋아요를 누르지 않은 상태인 경우 -> 좋아요 추가 요청
       if (!liked) {
         const response = await axiosInstance.post('/api/likes', {
           storyId: parseInt(storyId),
-          userId: 1,
+          userId: userId,
         });
         if (response.status === 200) {
           setLikes((prevLikes) => prevLikes + 1);
           setLiked(true);
         }
       } else {
+        // 사용자가 이미 좋아요를 누른 상태인 경우 -> 좋아요 취소 요청
         const response = await axiosInstance.delete('/api/likes', {
           params: {
-            userId: 1,
+            userId: userId,
             storyId: parseInt(storyId),
           },
         });
@@ -95,6 +99,7 @@ const StoryDetail = () => {
         }
       }
     } catch (error) {
+      // 에러 발생 시 오류 메시지를 설정하고 좋아요 상태를 유지합니다.
       setError('좋아요 처리에 실패했습니다.');
       console.error('좋아요 추가/취소에 실패했습니다:', error);
     }
@@ -106,7 +111,7 @@ const StoryDetail = () => {
     try {
       const response = await axiosInstance.post('/api/comments', {
         storyId: parseInt(storyId),
-        userId: 1,
+        userId: userId,
         content: newComment,
       });
       if (response.status === 200) {

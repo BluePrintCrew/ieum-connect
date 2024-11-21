@@ -7,7 +7,8 @@
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
-  background-color: #ffc0cb;
+  background-color: #ffe4e1;
+  min-height: 100vh; /* 화면 전체를 채우도록 설정 */
 }
 
 /* 상단: 닉네임과 설정 */
@@ -159,10 +160,10 @@
 
 /* 현재 페이지 번호 스타일 */
 .current-page-number {
-  font-size: 14px; /* 글씨 크기를 작게 설정 */
-  font-weight: normal; /* 글씨 두께를 가볍게 설정 */
-  color: #333; /* 어두운 회색 */
-  margin-bottom: 5px; /* 필터 옵션과의 간격을 위해 아래 마진 추가 */
+  font-size: 14px;
+  font-weight: normal;
+  color: #333;
+  margin-bottom: 5px;
 }
 
 /* 필터 옵션 스타일 */
@@ -175,7 +176,7 @@
   padding: 10px 15px;
   font-size: 16px;
   border: 1px solid #ddd;
-  border-radius: 20px; /* 둥근 스타일 */
+  border-radius: 20px;
   background-color: #f9f9f9;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   outline: none;
@@ -189,17 +190,35 @@
 }
 
 .no-results-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin-top: 20px;
-  padding: 20px;
+  padding: 30px;
+  height: auto;
   text-align: center;
   font-size: 1.2em;
   color: #555;
-  background-color: #fce4ec; /* 연핑크 배경색 */
-  border: 2px solid #f8bbd0;
-  border-radius: 15px;
-  font-family: 'Comic Sans MS', 'Arial', sans-serif; /* 귀여운 폰트 */
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* 가벼운 그림자 */
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
+.no-results-message img {
+  max-width: 300px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.no-results-message:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
+}
+
 
 /* 페이지 네비게이션 스타일 */
 .pagination-button {
@@ -228,8 +247,8 @@
 }
 
 .current-page-number {
-  font-size: 12px; /* 글씨 크기를 더 작게 */
-  font-style: italic; /* 이탤릭체 적용 */
-  color: #777; /* 더 부드러운 색상 사용 */
+  font-size: 12px;
+  font-style: italic;
+  color: #777;
   margin-bottom: 5px;
 }
