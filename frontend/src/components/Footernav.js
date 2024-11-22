@@ -15,5 +15,5 @@ const FooterNav = () => {
   );
   
 };
-<FooterNav />
+
 export default FooterNav;
