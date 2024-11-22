@@ -17,11 +17,13 @@ const axiosInstance = axios.create({
 const StoryDetail = () => {
   const { storyId } = useParams();
   const userId = parseInt(JSON.parse(localStorage.getItem('user'))?.userId);
+  
+  // useState를 사용하여 liked와 other 상태 초기화
   const [story, setStory] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(null); // 초기값을 false로 설정하고 나중에 업데이트함
   const [likes, setLikes] = useState(0);
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,8 +48,8 @@ const StoryDetail = () => {
           setStory(storyData);
           setLikes(storyData.likeCount);
           setComments(storyData.comments || []);
-          setLiked(storyData.isLiked);
-          setFollowing(storyData.isFollowing);
+          setLiked(storyData.liked); // 백엔드에서 받은 isLiked 값을 상태 변수로 설정
+          setFollowing(storyData.following);
 
           // 스토리의 사진 데이터를 개별적으로 가져오기
           const photoPromises = storyData.photos.map((photo) =>
@@ -78,12 +80,11 @@ const StoryDetail = () => {
     };
 
     fetchStory();
-  }, [storyId, userId]); // userId를 의존성으로 추가하여 현재 사용자가 변경되면 데이터를 다시 가져옴
+  }, [storyId, userId]); // storyId와 userId가 변경될 때마다 useEffect가 실행
 
   const handleLike = async () => {
     try {
       setError('');
-      setLoading(true);
 
       if (!liked) {
         // 좋아요 추가 요청
@@ -97,12 +98,15 @@ const StoryDetail = () => {
         }
       } else {
         // 좋아요 취소 요청
-        const response = await axiosInstance.delete('/api/likes', {
-          params: {
-            userId: userId,
-            storyId: parseInt(storyId),
-          },
-        });
+        const params = {
+          userId: userId,
+          storyId: parseInt(storyId),
+        };
+        
+        console.log(`http://localhost:8080/api/likes?userId=${params.userId}&storyId=${params.storyId}`); // 실제 요청 URL 출력
+        
+        const response = await axiosInstance.delete('/api/likes', { params });
+        
         if (response.status === 200) {
           setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
           setLiked(false);
@@ -111,15 +115,12 @@ const StoryDetail = () => {
     } catch (error) {
       setError('좋아요 처리에 실패했습니다.');
       console.error('좋아요 추가/취소에 실패했습니다:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleFollow = async () => {
     try {
       setError('');
-      setLoading(true);
 
       if (!following) {
         // 팔로우 추가 요청
@@ -145,8 +146,6 @@ const StoryDetail = () => {
     } catch (error) {
       setError('팔로우 처리에 실패했습니다.');
       console.error('팔로우 추가/취소에 실패했습니다:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -155,7 +154,6 @@ const StoryDetail = () => {
 
     try {
       setError('');
-      setLoading(true);
 
       const response = await axiosInstance.post('/api/comments', {
         storyId: parseInt(storyId),
@@ -172,8 +170,6 @@ const StoryDetail = () => {
     } catch (error) {
       setError('댓글 추가에 실패했습니다.');
       console.error('댓글 추가에 실패했습니다:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
