@@ -6,6 +6,7 @@ import '../storydetail.css';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import CantFollowing from './CantFollowing'; // 모달 컴포넌트 임포트
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8080',
@@ -16,18 +17,18 @@ const axiosInstance = axios.create({
 
 const StoryDetail = () => {
   const { storyId } = useParams();
-  const userId = parseInt(JSON.parse(localStorage.getItem('user'))?.userId);
-  
-  // useState를 사용하여 liked와 other 상태 초기화
+  const currentUserId = parseInt(JSON.parse(localStorage.getItem('user'))?.userId, 10);
+
   const [story, setStory] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
-  const [liked, setLiked] = useState(null); // 초기값을 false로 설정하고 나중에 업데이트함
+  const [liked, setLiked] = useState(null);
   const [likes, setLikes] = useState(0);
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 창 상태
 
   useEffect(() => {
     // 스토리 정보를 가져오기
@@ -38,7 +39,7 @@ const StoryDetail = () => {
         // currentUserId를 포함한 API 요청
         const response = await axiosInstance.get(`/api/stories/${storyId}`, {
           params: {
-            currentUserId: userId,
+            currentUserId,
           },
         });
         const storyData = response.data;
@@ -48,7 +49,7 @@ const StoryDetail = () => {
           setStory(storyData);
           setLikes(storyData.likeCount);
           setComments(storyData.comments || []);
-          setLiked(storyData.liked); // 백엔드에서 받은 isLiked 값을 상태 변수로 설정
+          setLiked(storyData.liked);
           setFollowing(storyData.following);
 
           // 스토리의 사진 데이터를 개별적으로 가져오기
@@ -80,7 +81,7 @@ const StoryDetail = () => {
     };
 
     fetchStory();
-  }, [storyId, userId]); // storyId와 userId가 변경될 때마다 useEffect가 실행
+  }, [storyId, currentUserId]);
 
   const handleLike = async () => {
     try {
@@ -89,8 +90,8 @@ const StoryDetail = () => {
       if (!liked) {
         // 좋아요 추가 요청
         const response = await axiosInstance.post('/api/likes', {
-          storyId: parseInt(storyId),
-          userId: userId,
+          storyId: parseInt(storyId, 10),
+          userId: currentUserId,
         });
         if (response.status === 200) {
           setLikes((prevLikes) => prevLikes + 1);
@@ -99,18 +100,14 @@ const StoryDetail = () => {
       } else {
         // 좋아요 취소 요청
         const params = {
-          userId: userId,
-          storyId: parseInt(storyId),
+          userId: currentUserId,
+          storyId: parseInt(storyId, 10),
         };
-        
-        console.log(`http://localhost:8080/api/likes?userId=${params.userId}&storyId=${params.storyId}`); // 실제 요청 URL 출력
-        
-        const response = await axiosInstance.delete('/api/likes', { params });
-        
-        if (response.status === 200) {
-          setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
-          setLiked(false);
-        }
+
+        await axiosInstance.delete('/api/likes', { params });
+
+        setLikes((prevLikes) => Math.max(prevLikes - 1, 0));
+        setLiked(false);
       }
     } catch (error) {
       setError('좋아요 처리에 실패했습니다.');
@@ -123,9 +120,15 @@ const StoryDetail = () => {
       setError('');
 
       if (!following) {
+        // 자신을 팔로우하려는 경우 모달 창 표시
+        if (story.user.userId === currentUserId) {
+          setIsModalOpen(true);
+          return;
+        }
+
         // 팔로우 추가 요청
         const response = await axiosInstance.post('/api/follows', {
-          followerId: userId,
+          followerId: currentUserId,
           followingId: story.user.userId,
         });
         if (response.status === 200) {
@@ -135,7 +138,7 @@ const StoryDetail = () => {
         // 팔로우 취소 요청
         const response = await axiosInstance.delete('/api/follows', {
           data: {
-            followerId: userId,
+            followerId: currentUserId,
             followingId: story.user.userId,
           },
         });
@@ -156,14 +159,18 @@ const StoryDetail = () => {
       setError('');
 
       const response = await axiosInstance.post('/api/comments', {
-        storyId: parseInt(storyId),
-        userId: userId,
+        storyId: parseInt(storyId, 10),
+        userId: currentUserId,
         content: newComment,
       });
       if (response.status === 200) {
         setComments((prevComments) => [
           ...prevComments,
-          { content: newComment, username: '사용자', createdAt: new Date().toISOString() },
+          {
+            content: newComment,
+            username: response.data.username || '사용자',
+            createdAt: new Date().toISOString(),
+          },
         ]);
         setNewComment('');
       }
@@ -195,7 +202,6 @@ const StoryDetail = () => {
       <div className="story-info">
         <span>작성자: {story.user.username}</span>
         <span>작성일: {new Date(story.createdAt).toLocaleString()}</span>
-        <button className="reference-button">따라하기</button>
       </div>
 
       <div className="story-content">{story.description}</div>
@@ -233,14 +239,18 @@ const StoryDetail = () => {
         </div>
       )}
 
-      <div className="like-section">
-        <button onClick={handleLike}>
-          {liked ? '좋아요 취소' : '좋아요'}
-        </button>
-        <span>좋아요 {likes}개</span>
+      {/* 좋아요, 팔로우, 따라하기 버튼이 같은 행에 위치하도록 수정 */}
+      <div className="interaction-section">
+        <div className="like-section">
+          <button className="like-button" onClick={handleLike}>
+            {liked ? '좋아요 취소' : '좋아요'}
+          </button>
+          <span>좋아요 {likes}개</span>
+        </div>
         <button className="follow-button" onClick={handleFollow}>
           {following ? '팔로우 취소' : '팔로우'}
         </button>
+        <button className="reference-button">따라하기</button>
       </div>
 
       <div className="preference-container">
@@ -265,7 +275,9 @@ const StoryDetail = () => {
         {comments.length > 0 ? (
           comments.map((comment, index) => (
             <div key={index} className="comment">
-              <span>{comment.username || '익명 사용자'}: {comment.content}</span>
+              <span>
+                {comment.username || '익명 사용자'}: {comment.content}
+              </span>
             </div>
           ))
         ) : (
@@ -281,6 +293,9 @@ const StoryDetail = () => {
           <button onClick={handleAddComment}>댓글 달기</button>
         </div>
       </div>
+
+      {/* 자신을 팔로우하려는 경우 모달 창 */}
+      <CantFollowing isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

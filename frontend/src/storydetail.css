@@ -1,5 +1,3 @@
-/* storydetail.css */
-
 /* slick-carousel CSS 임포트 */
 @import "~slick-carousel/slick/slick.css";
 @import "~slick-carousel/slick/slick-theme.css";
@@ -30,26 +28,6 @@
   justify-content: space-between;
   align-items: center;
 }
-
-/* 따라하기 버튼 스타일 */
-.reference-button {
-  background-color: #81ecec;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  position: absolute;
-  top: 0;
-  right: 0;
-  transform: translateY(-50%);
-}
-
-.reference-button:hover {
-  background-color: #00cec9;
-}
-
 
 /* 내용 스타일 */
 .story-content {
@@ -104,17 +82,16 @@
   color: #ff7675;
 }
 
-/* 좋아요 섹션 스타일 */
-.like-section {
+/* 좋아요, 팔로우, 따라하기 섹션 스타일 */
+.interaction-section {
   margin-top: 30px;
   display: flex;
   align-items: center;
+  gap: 10px; /* 버튼들 간의 간격 추가 */
   margin-bottom: 20px;
 }
 
-.like-section button {
-  background-color: #ff7675;
-  color: #fff;
+.interaction-section button {
   border: none;
   border-radius: 5px;
   padding: 10px 20px;
@@ -122,30 +99,40 @@
   transition: background-color 0.3s;
 }
 
-.like-section button:hover {
+/* 좋아요 버튼 스타일 */
+.interaction-section .like-button {
+  background-color: #ff7675;
+  color: #fff;
+}
+
+.like-button:hover {
   background-color: #e64e4e;
 }
 
-.like-section span {
-  margin-left: 10px;
-  font-size: 16px;
-  font-weight: bold;
-}
-
 /* 팔로우 버튼 스타일 */
-.like-section .follow-button {
+.interaction-section .follow-button {
   background-color: #74b9ff;
   color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-left: 50%;
 }
 
 .follow-button:hover {
   background-color: #4a8cd9;
+}
+
+/* 따라하기 버튼 스타일 */
+.interaction-section .reference-button {
+  background-color: #81ecec;
+  color: #fff;
+}
+
+.reference-button:hover {
+  background-color: #00cec9;
+}
+
+/* 좋아요 개수 표시 스타일 */
+.interaction-section span {
+  font-size: 16px;
+  font-weight: bold;
 }
 
 /* 선호도 아이콘 스타일 */
@@ -245,12 +232,6 @@
     align-items: flex-start;
     position: relative;
   }
-  
-  .story-info > .reference-button {
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
 
   .story-map #map {
     height: 300px;
@@ -264,7 +245,7 @@
     font-size: 20px;
   }
 
-  .like-section button {
+  .interaction-section button {
     padding: 8px 16px;
   }
 
