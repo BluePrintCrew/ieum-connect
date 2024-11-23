@@ -28,7 +28,28 @@
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
+
+/* 따라하기 버튼 스타일 */
+.reference-button {
+  background-color: #81ecec;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.reference-button:hover {
+  background-color: #00cec9;
+}
+
 
 /* 내용 스타일 */
 .story-content {
@@ -67,7 +88,7 @@
   object-fit: cover; /* 이미지가 컨테이너를 채우도록 설정 */
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin-top:10px;
+  margin-top: 10px;
 }
 
 /* 슬라이더 도트 스타일 */
@@ -85,7 +106,7 @@
 
 /* 좋아요 섹션 스타일 */
 .like-section {
-  margin-top:30px;
+  margin-top: 30px;
   display: flex;
   align-items: center;
   margin-bottom: 20px;
@@ -109,6 +130,22 @@
   margin-left: 10px;
   font-size: 16px;
   font-weight: bold;
+}
+
+/* 팔로우 버튼 스타일 */
+.like-section .follow-button {
+  background-color: #74b9ff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: 50%;
+}
+
+.follow-button:hover {
+  background-color: #4a8cd9;
 }
 
 /* 선호도 아이콘 스타일 */
@@ -200,9 +237,19 @@
   }
 
   .story-info {
-    font-size: 12px;
-    flex-direction: column;
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column; /* 수직 정렬을 위해 변경 */
     align-items: flex-start;
+    position: relative;
+  }
+  
+  .story-info > .reference-button {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 
   .story-map #map {

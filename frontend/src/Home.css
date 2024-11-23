@@ -9,6 +9,8 @@
   box-sizing: border-box;
   background-color: #ffe4e1;
   min-height: 100vh; /* 화면 전체를 채우도록 설정 */
+  position: relative; /* 레이아웃 충돌 방지 */
+  z-index: 1; /* 다른 컴포넌트와의 레이어 충돌 방지 */
 }
 
 /* 상단: 닉네임과 설정 */
@@ -87,6 +89,7 @@
 .story-list {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .story-item {
@@ -121,10 +124,11 @@
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px; /* 하단과의 간격 추가 */
 }
 
 /* 검색 결과 항목 스타일 */
-.story-item {
+.search-results .story-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -132,20 +136,20 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
-.story-number {
+.search-results .story-number {
   font-size: 18px;
   font-weight: bold;
   color: #555;
 }
 
-.story-name {
+.search-results .story-name {
   flex: 1;
   margin-left: 10px;
   font-size: 16px;
   color: #333;
 }
 
-.likes {
+.search-results .likes {
   font-size: 14px;
   color: #888;
 }
@@ -158,20 +162,6 @@
   margin: 20px 0;
 }
 
-/* 현재 페이지 번호 스타일 */
-.current-page-number {
-  font-size: 14px;
-  font-weight: normal;
-  color: #333;
-  margin-bottom: 5px;
-}
-
-/* 필터 옵션 스타일 */
-.filter-options {
-  display: flex;
-  align-items: center;
-}
-
 .filter-options select {
   padding: 10px 15px;
   font-size: 16px;
@@ -179,16 +169,15 @@
   border-radius: 20px;
   background-color: #f9f9f9;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  outline: none;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .filter-options select:hover {
   background-color: #f0f0f0;
-  border-color: #ccc;
 }
 
+/* "검색 결과 없음" 메시지 */
 .no-results-message {
   display: flex;
   flex-direction: column;
@@ -203,9 +192,7 @@
   background-color: #ffffff;
   border: 1px solid #ddd;
   border-radius: 25px;
-  font-family: 'Arial', sans-serif;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .no-results-message img {
@@ -213,12 +200,6 @@
   border-radius: 15px;
   margin-bottom: 20px;
 }
-
-.no-results-message:hover {
-  transform: translateY(-5px);
-  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
-}
-
 
 /* 페이지 네비게이션 스타일 */
 .pagination-button {
@@ -230,7 +211,6 @@
   border-radius: 50%;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform 0.3s ease;
 }
 
 .pagination-button:hover {
@@ -240,15 +220,4 @@
 .pagination-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.current-page {
-  font-weight: bold;
-}
-
-.current-page-number {
-  font-size: 12px;
-  font-style: italic;
-  color: #777;
-  margin-bottom: 5px;
 }
