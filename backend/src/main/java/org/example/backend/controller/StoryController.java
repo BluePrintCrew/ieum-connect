@@ -113,7 +113,8 @@ public class StoryController {
                     request.getPreference(),
                     request.getVisibility(),
                     request.getHashtags(),
-                    request.getRoutePoints()
+                    request.getRoutePoints(),
+                    request.getPlanState()
             );
 
             ResponseStoryDto.CreateStoryResponse response = new ResponseStoryDto.CreateStoryResponse();
@@ -162,6 +163,24 @@ public class StoryController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(convertToDTO(story,currentUserId));
+    }
+
+    @GetMapping("/planned/{userId}")
+    @Operation(summary = "userId를 통한 PLANNED 상태의 스토리 조회", description = "마이페이지에서 자신의 계획된 스토리 조회")
+    public ResponseEntity<List<StoryDTO.Response>> getPlannedStoriesByUserId(
+            @PathVariable("userId") Long userId,
+            @RequestParam(required = false) Long currentUserId
+    ) {
+
+        List<Story> stories = storyService.getPlannedStoriesByUserId(userId);
+        if (stories.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        List<StoryDTO.Response> responses = stories.stream()
+                .map(story -> convertToDTO(story, currentUserId))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/member/{userId}")
@@ -221,7 +240,7 @@ public class StoryController {
             @RequestParam("hashtag") String hashtagName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "likeCount") String sort,
             @RequestParam(defaultValue = "desc") String direction) {
 
 
@@ -321,6 +340,21 @@ public class StoryController {
         }
     }
 
+    @GetMapping("/planned")
+    @Operation(summary = "계획된 스토리 조회", description = "PLANNED 상태인 스토리 목록을 페이징 처리하여 반환")
+    public ResponseEntity<Page<StoryDTO.Response>> getPlannedStories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long currentUserId) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Story> stories = storyService.getStoriesByPlanState(Story.PlanState.PLANNED, pageable);
+        Page<StoryDTO.Response> storyDTOs = stories.map(story -> convertToDTO(story, currentUserId));
+
+        return storyDTOs.isEmpty() ?
+                ResponseEntity.noContent().build() :
+                ResponseEntity.ok(storyDTOs);
+    }
 
 
     @GetMapping("/top")
@@ -406,6 +440,8 @@ public class StoryController {
             dto.setCreatedAt(story.getCreatedAt());
             dto.setVisibility(story.getVisibility());
             dto.setPreference(story.getPreference());
+            dto.setPlanState(story.getPlanState());
+
 
             // User 정보 설정
             StoryDTO.UserDTO userDTO = new StoryDTO.UserDTO();

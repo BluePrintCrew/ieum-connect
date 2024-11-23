@@ -20,6 +20,7 @@ public class ResponseStoryDto {
         private String memo;
         private int preference;
         private Story.Visibility visibility;
+        private Story.PlanState planState;
         private List<String> hashtags;
         private List<RoutePointDTO> routePoints;
 
@@ -29,9 +30,10 @@ public class ResponseStoryDto {
     public static class UpdateStoryRequest {
         private String title;
         private String description;
-       // private int preference;
+        private int preference;
         private List<String> hashtags;
         private Story.Visibility visibility;
+        private Story.PlanState planState;
 
     }
 

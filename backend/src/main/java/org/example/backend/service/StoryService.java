@@ -40,7 +40,9 @@ public class StoryService {
     private String uploadPath;
     public StoryService(StoryRepository storyRepository, RouteRepository routeRepository,
                         RoutePointRepository routePointRepository, PhotoRepository photoRepository,
-                        HashtagRepository hashtagRepository, PhotoService photoService,KakaoAddressService kakaoAddressService,FollowService followService) {
+                        HashtagRepository hashtagRepository, PhotoService photoService,
+                        KakaoAddressService kakaoAddressService,FollowService followService
+                        ) {
         this.storyRepository = storyRepository;
         this.routeRepository = routeRepository;
         this.routePointRepository = routePointRepository;
@@ -53,12 +55,16 @@ public class StoryService {
 
     @Transactional
     public List<Story> getStoryByUserId(Long memberId) {
-            return storyRepository.findByUserUserId(memberId);
+        return storyRepository.findByUserUserIdAndPlanState(memberId, Story.PlanState.PUBLISH);
     }
 
     @Transactional(readOnly = true)
     public Page<Story> getStoriesByLikes(Pageable pageable) {
-        return storyRepository.findByVisibilityOrderByLikeCountDesc(Story.Visibility.PUBLIC,pageable);
+        return storyRepository.findByVisibilityAndPlanStateOrderByLikeCountDesc(
+                Story.Visibility.PUBLIC,
+                Story.PlanState.PUBLISH,
+                pageable
+        );
     }
 
     @Transactional
@@ -69,19 +75,26 @@ public class StoryService {
 
     @Transactional
     public Page<Story> findStoriesByHashtag(String hashtagName, Pageable pageable){
-        return storyRepository.findByRouteHashtagsNameContainingIgnoreCaseAndVisibility(hashtagName,Story.Visibility.PUBLIC,pageable);
-    }
+        return storyRepository.findByRouteHashtagsNameContainingIgnoreCaseAndVisibilityAndPlanState(
+                hashtagName,
+                Story.Visibility.PUBLIC,
+                Story.PlanState.PUBLISH,
+                pageable
+        );
+        }
     // 사진 두개 이상 넣기 위한 발버둥
     @Transactional
     public Story createStoryInfo(User user, String title, String memo, int preference,
                                  Story.Visibility visibility, List<String> hashtags,
-                                 List<ResponseStoryDto.RoutePointDTO> routePointDTOS) throws IOException {
+                                 List<ResponseStoryDto.RoutePointDTO> routePointDTOS,
+                                Story.PlanState planState) throws IOException {
         Story story = new Story();
         story.setUser(user);
         story.setTitle(title);
         story.setDescription(memo);
         story.setVisibility(visibility);
         story.setPreference(preference);
+        story.setPlanState(planState);
 
         story = storyRepository.save(story);
 
@@ -190,7 +203,11 @@ public class StoryService {
 
     @Transactional(readOnly = true)
     public Page<Story> getStoriesByTime(Pageable pageable) {
-        return storyRepository.findByVisibilityOrderByCreatedAtDesc(Story.Visibility.PUBLIC,pageable);
+        return storyRepository.findByVisibilityAndPlanStateOrderByCreatedAtDesc(
+                Story.Visibility.PUBLIC,
+                Story.PlanState.PUBLISH,
+                pageable
+        );
     }
 
     @Transactional
@@ -199,6 +216,8 @@ public class StoryService {
         byStoryId.setTitle(request.getTitle());
         byStoryId.setDescription(request.getDescription());
         byStoryId.setVisibility(request.getVisibility());
+        byStoryId.setPreference(request.getPreference());
+        byStoryId.setPlanState(request.getPlanState());
 
         storyRepository.save(byStoryId);
 
@@ -298,4 +317,15 @@ public class StoryService {
         Story byStoryId = storyRepository.findByStoryId(storyId);
         storyRepository.delete(byStoryId);
     }
+
+    @Transactional(readOnly = true)
+    public Page<Story> getStoriesByPlanState(Story.PlanState planState, Pageable pageable) {
+        return storyRepository.findByPlanState(planState, pageable);
+    }
+
+    @Transactional
+    public List<Story> getPlannedStoriesByUserId(Long userId) {
+        return storyRepository.findByUserUserIdAndPlanState(userId, Story.PlanState.PLANNED);
+    }
+
 }
