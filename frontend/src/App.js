@@ -24,6 +24,8 @@ function AnimatedRoutes() {
         <TransitionGroup>
           <CSSTransition key={location.key} classNames="fade" timeout={300}>
             <Routes location={location}>
+            <Route path="/login" element={<LoginPage />} />
+              <Route path="/oauth/kakao/callback" element={<KakaoCallback />} />
               <Route path="/home" element={<Home />} />
               <Route path="/record" element={<StoryRecord />} />
               <Route path="/search" element={<SearchMemory />} />
