@@ -44,5 +44,15 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     );
 
     List<Story> findByLikesUser(User user);
+
+    Page<Story> findByPlanState(Story.PlanState planState, Pageable pageable);
+
+    Page<Story> findByVisibilityAndPlanStateOrderByCreatedAtDesc(Story.Visibility visibility, Story.PlanState planState, Pageable pageable);
+
+    Page<Story> findByVisibilityAndPlanStateOrderByLikeCountDesc(Story.Visibility visibility, Story.PlanState planState, Pageable pageable);
+
+    Page<Story> findByRouteHashtagsNameContainingIgnoreCaseAndVisibilityAndPlanState(String hashtagName, Story.Visibility visibility, Story.PlanState planState, Pageable pageable);
+
+    List<Story> findByUserUserIdAndPlanState(Long userId, Story.PlanState planState);
 }
 

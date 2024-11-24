@@ -21,6 +21,7 @@ public class StoryDTO {
         private String description;
         private LocalDateTime createdAt;
         private Story.Visibility visibility;
+        private Story.PlanState planState;
         private UserDTO user;
         private RouteDTO route;
         private int preference;
