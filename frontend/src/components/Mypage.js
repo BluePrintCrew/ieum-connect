@@ -22,6 +22,7 @@ const MyPage = () => {
 
   const [myStories, setMyStories] = useState([]);
   const [likedStories, setLikedStories] = useState([]);
+  const [plannedStories, setPlannedStories] = useState([]); // 계획 중인 스토리 상태 추가
   const [following, setFollowing] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false); // 모달 창 상태
 
@@ -46,6 +47,19 @@ const MyPage = () => {
     } catch (error) {
       console.error(
         '좋아요 한 스토리 데이터를 가져오는 중 오류 발생:',
+        error.response ? error.response.data : error
+      );
+    }
+  };
+
+  // 계획 중인 스토리 데이터 가져오기
+  const fetchPlannedStories = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/stories/planned/${currentUserId}`);
+      setPlannedStories(response.data || []);
+    } catch (error) {
+      console.error(
+        '계획 중인 스토리 데이터를 가져오는 중 오류 발생:',
         error.response ? error.response.data : error
       );
     }
@@ -90,9 +104,7 @@ const MyPage = () => {
           followingId: authorId,
         },
       });
-      setFollowing((prevFollowing) =>
-        prevFollowing.filter((id) => id !== authorId)
-      );
+      setFollowing((prevFollowing) => prevFollowing.filter((id) => id !== authorId));
     } catch (error) {
       console.error(
         '언팔로우 요청 중 오류 발생:',
@@ -105,6 +117,7 @@ const MyPage = () => {
     if (currentUserId) {
       fetchMyStories();
       fetchLikedStories();
+      fetchPlannedStories(); // 계획 중인 스토리 데이터 가져오기
       fetchFollowing();
     } else {
       console.error('User ID is not available in localStorage');
@@ -123,6 +136,26 @@ const MyPage = () => {
         alert('스토리 삭제에 실패했습니다.');
       }
     }
+  };
+
+  // 계획 중 스토리 삭제 함수
+  const handleDeletePlannedStory = async (storyId) => {
+    if (window.confirm('정말로 이 계획을 삭제하시겠습니까?')) {
+      try {
+        await axiosInstance.delete(`/api/stories/${storyId}`);
+        setPlannedStories((prevStories) =>
+          prevStories.filter((story) => story.storyId !== storyId)
+        );
+      } catch (error) {
+        console.error('계획 삭제 중 오류 발생:', error);
+        alert('계획 삭제에 실패했습니다.');
+      }
+    }
+  };
+
+  // 계획 중 스토리 기록하기로 이동
+  const handleRecordPlannedStory = (storyId) => {
+    navigate(`/storyplan/regist/${storyId}`);
   };
 
   const handleFollowButtonClick = (e, storyUserId) => {
@@ -185,9 +218,7 @@ const MyPage = () => {
       )}
 
       {/* 좋아요 한 스토리 */}
-      <div className="middle-mypage">
-        <h2 className="mypage-title">좋아요 한 스토리</h2>
-      </div>
+      <h2 className="mypage-title">좋아요 한 스토리</h2>
       {likedStories?.length > 0 ? (
         <ul className="memory-list">
           {likedStories.map((story) => {
@@ -207,7 +238,7 @@ const MyPage = () => {
                   onClick={(e) => handleFollowButtonClick(e, storyUserId)}
                 >
                   {storyUserId === currentUserId
-                    ?  '팔로우'// 자신의 스토리인 경우 팔로우 버튼 비활성
+                    ? '팔로우'
                     : isFollowing
                     ? '언팔로우'
                     : '팔로우'}
@@ -220,10 +251,41 @@ const MyPage = () => {
         <p>좋아요 한 추억이 없습니다.</p>
       )}
 
+      {/* 계획 중인 스토리 */}
+      <h2 className="mypage-title">계획 중인 스토리</h2>
+      {plannedStories?.length > 0 ? (
+        <ul className="memory-list">
+          {plannedStories.map((story) => (
+            <li key={story.storyId} className="memory-item">
+              <span
+                className="memory-title"
+                onClick={() => navigate(`/story/detail/${story.storyId}`)}
+              >
+                {story.title}
+              </span>
+              <button
+                className="check-button"
+                onClick={() => handleRecordPlannedStory(story.storyId)}
+              >
+                확정
+              </button>
+              <button
+                className="delete-button"
+                onClick={() => handleDeletePlannedStory(story.storyId)}
+              >
+                삭제
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>계획 중인 스토리가 없습니다.</p>
+      )}
+
       {/* 자신을 팔로우하려는 경우 모달 창 */}
       <CantFollowing isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      {/* 하단 네비게이션 */}
+      {/* Footer Navigation */}
       <FooterNav />
     </div>
   );

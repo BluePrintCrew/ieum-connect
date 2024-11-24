@@ -54,3 +54,29 @@
   transform: scale(0.9);
   transition: opacity 300ms, transform 300ms;
 }
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-container > .fade-enter {
+  opacity: 0;
+}
+.app-container > .fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+.app-container > .fade-exit {
+  opacity: 1;
+}
+.app-container > .fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+main {
+  flex: 1; /* 콘텐츠가 푸터를 덮지 않도록 */
+  overflow-y: auto;
+  padding-bottom: 70px; /* FooterNav 높이 */
+}

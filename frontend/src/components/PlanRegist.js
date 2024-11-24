@@ -1,34 +1,45 @@
+// PlanRegist.js
+
 import React, { useState, useEffect, useRef } from 'react';
 import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
 import { getAddressFromCoords } from '../function/kakaoGeocoder';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import '../storyrecord.css';
-import { useNavigate } from 'react-router-dom';
-import FooterNav from './Footernav';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
-const StoryRecord = () => {
+const PlanRegist = () => {
+  const { storyId } = useParams(); // URL에서 storyId 가져오기
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
+
   const [title, setTitle] = useState('');
   const [memo, setMemo] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
   const [preference, setPreference] = useState(0);
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState([]);
-  const [recommendedKeywords, setRecommendedKeywords] = useState([]);
-  const [isSpotAdding, setIsSpotAdding] = useState(false);
   const [markers, setMarkers] = useState([]);
   const [addresses, setAddresses] = useState([]);
-  const [model, setModel] = useState(null);
   const [visibility, setVisibility] = useState('PUBLIC');
-  const navigate = useNavigate();
+
+  const [selectedFiles, setSelectedFiles] = useState([]); // 새로 추가된 이미지 파일들
+  const [imagePreviews, setImagePreviews] = useState([]); // 새로 추가된 이미지 미리보기
+  const [existingImages, setExistingImages] = useState([]); // 기존 이미지 정보
+  const [imagesToDelete, setImagesToDelete] = useState([]); // 삭제할 이미지 ID 목록
+
+  const [model, setModel] = useState(null);
+  const [recommendedKeywords, setRecommendedKeywords] = useState([]);
   const isUpdatingKeywords = useRef(false);
   const detectedLabelsSet = useRef(new Set());
-  const user = JSON.parse(localStorage.getItem('user'));
+  const [isSpotAdding, setIsSpotAdding] = useState(false);
+  const [loading, setLoading] = useState(true); // 로딩 상태 추가
 
+  const [center, setCenter] = useState(null); // 지도 중심 상태 추가
+
+  // 모델 로드
   useEffect(() => {
     const loadModel = async () => {
       try {
@@ -42,6 +53,65 @@ const StoryRecord = () => {
     loadModel();
   }, []);
 
+  // 스토리 데이터 가져오기
+  useEffect(() => {
+    const fetchStoryData = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/stories/${storyId}`);
+        const storyData = response.data;
+
+        // 상태 변수에 데이터 설정
+        setTitle(storyData.title);
+        setMemo(storyData.memo);
+        setPreference(storyData.preference);
+        setHashtags(storyData.hashtags);
+        setVisibility(storyData.visibility);
+
+        // 마커 설정
+        const routePoints = storyData.route?.routePoints || [];
+        const newMarkers = routePoints.map((point) => ({
+          lat: point.latitude,
+          lng: point.longitude,
+          address: point.address || '', // 주소가 있다면 설정
+        }));
+        console.log('마커 데이터:', newMarkers);
+        setMarkers(newMarkers);
+
+        // 지도 중심 설정
+        if (newMarkers.length > 0) {
+          setCenter({
+            lat: newMarkers[0].lat,
+            lng: newMarkers[0].lng,
+          });
+        } else {
+          // 마커가 없을 경우 기본 위치 설정
+          setCenter({
+            lat: 37.5665,
+            lng: 126.9780,
+          });
+        }
+
+        // 기존 이미지 설정
+        const imageInfos = storyData.photos.map((photo) => ({
+          imageId: photo.imageId,
+          url: photo.url,
+        }));
+        setExistingImages(imageInfos);
+      } catch (error) {
+        console.error('스토리 데이터 가져오는 중 오류 발생:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (storyId) {
+      fetchStoryData();
+    } else {
+      setLoading(false);
+    }
+  }, [storyId]);
+
+  // 이미지 처리 함수들
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files).filter(
       (file) => file.type === 'image/jpeg' || file.type === 'image/png'
@@ -52,22 +122,22 @@ const StoryRecord = () => {
         ...prevPreviews,
         ...files.map((file) => URL.createObjectURL(file)),
       ]);
-      files.forEach((file) => {
-        processImage(file);
-      });
+      for (const file of files) {
+        await processImage(file);
+      }
     }
   };
 
-  const removeImage = (indexToRemove) => {
-    // 해당 이미지를 제거
+  const removeNewImage = (indexToRemove) => {
     setSelectedFiles((prevFiles) => prevFiles.filter((_, index) => index !== indexToRemove));
     setImagePreviews((prevPreviews) =>
       prevPreviews.filter((_, index) => index !== indexToRemove)
     );
+  };
 
-    // 마커 및 주소 데이터도 동일한 인덱스를 기준으로 제거
-    setMarkers((prevMarkers) => prevMarkers.filter((_, index) => index !== indexToRemove));
-    setAddresses((prevAddresses) => prevAddresses.filter((_, index) => index !== indexToRemove));
+  const removeExistingImage = (imageId) => {
+    setExistingImages((prevImages) => prevImages.filter((img) => img.imageId !== imageId));
+    setImagesToDelete((prev) => [...prev, imageId]);
   };
 
   const processImage = async (file) => {
@@ -76,7 +146,7 @@ const StoryRecord = () => {
     } catch (error) {
       console.error('EXIF 데이터 추출 중 오류 발생:', error);
     }
-    detectObjectsInImage(file);
+    await detectObjectsInImage(file);
   };
 
   const addMarkerFromExif = (data) => {
@@ -91,12 +161,19 @@ const StoryRecord = () => {
         };
         setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
         setAddresses((prevAddresses) => [...prevAddresses, address]);
+
+        // 지도 중심 업데이트
+        setCenter({
+          lat: data.latitude,
+          lng: data.longitude,
+        });
       });
     } else {
       console.warn('위도 및 경도 정보가 없습니다. EXIF 데이터:', data);
     }
   };
 
+  // 객체 감지 및 키워드 추천 함수들
   const detectObjectsInImage = async (file) => {
     if (!model) {
       console.error('모델이 아직 로드되지 않았습니다.');
@@ -147,7 +224,7 @@ const StoryRecord = () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
     await recommendKeywords(
-      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어, 자연, 여행, 인스타그램, 휴식스타그램, 달콤한휴식과 같은 키워드를 추천해 주세요."
+      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요."
     );
     isUpdatingKeywords.current = false;
   };
@@ -157,7 +234,7 @@ const StoryRecord = () => {
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-          model: 'gpt-4',
+          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'user',
@@ -188,6 +265,7 @@ const StoryRecord = () => {
     }
   };
 
+  // 입력 필드 및 이벤트 핸들러들
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleMemoChange = (e) => setMemo(e.target.value);
   const handlePreferenceChange = (newPreference) => setPreference(newPreference);
@@ -217,15 +295,17 @@ const StoryRecord = () => {
       latitude: marker.lat,
       longitude: marker.lng,
       orderNum: index + 1,
+      address: marker.address || '',
     }));
   };
 
+  // 제출 핸들러
   const handleSubmit = async () => {
     if (!title.trim() || !memo.trim()) {
       alert('제목과 메모는 필수 입력 사항입니다.');
       return;
     }
-    if (selectedFiles.length === 0) {
+    if (selectedFiles.length === 0 && existingImages.length === 0) {
       alert('이미지를 하나 이상 업로드해야 합니다.');
       return;
     }
@@ -241,31 +321,38 @@ const StoryRecord = () => {
       memo: memo.trim(),
       preference,
       visibility,
-      planState: "PUBLISH",
+      planState: 'PUBLISH',
       hashtags: hashtags.filter(Boolean),
       routePoints,
-
     };
 
     try {
-      // 스토리 기본 정보 생성
-      const storyInfoResponse = await axios.post('http://localhost:8080/api/stories/info', storyInfo, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // 스토리 정보 업데이트
+      const storyInfoResponse = await axios.put(
+        `http://localhost:8080/api/stories/${storyId}/info`,
+        storyInfo,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (storyInfoResponse.status === 200) {
-        console.log('스토리 정보 생성 성공:', storyInfoResponse.data);
-        const savedStoryId = storyInfoResponse.data.savedStoryId;
+        console.log('스토리 정보 업데이트 성공:', storyInfoResponse.data);
 
-        // 이미지를 저장된 스토리에 추가
+        // 삭제할 이미지 삭제
+        for (const imageId of imagesToDelete) {
+          await axios.delete(`http://localhost:8080/api/stories/${storyId}/images/${imageId}`);
+        }
+
+        // 새로 추가된 이미지 업로드
         for (const file of selectedFiles) {
           const formData = new FormData();
           formData.append('image', file);
 
           const imageResponse = await axios.post(
-            `http://localhost:8080/api/stories/${savedStoryId}/images`,
+            `http://localhost:8080/api/stories/${storyId}/images`,
             formData,
             {
               headers: {
@@ -282,7 +369,7 @@ const StoryRecord = () => {
         }
 
         // 모든 처리가 성공적으로 완료된 후 홈으로 이동
-        alert('스토리가 성공적으로 저장되었습니다!');
+        alert('스토리가 성공적으로 업데이트되었습니다!');
         navigate('/home');
       } else {
         console.error('예상치 못한 응답:', storyInfoResponse);
@@ -295,6 +382,7 @@ const StoryRecord = () => {
     }
   };
 
+  // 마커 순서 변경
   const onDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -303,6 +391,10 @@ const StoryRecord = () => {
     updatedMarkers.splice(result.destination.index, 0, reorderedMarker);
     setMarkers(updatedMarkers);
   };
+
+  if (loading || !center) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="storyrecord-container">
@@ -325,7 +417,12 @@ const StoryRecord = () => {
         </label>
       </div>
       <div className={`map-container ${isSpotAdding ? 'spot-adding' : ''}`}>
-        <KakaoMap isSpotAdding={isSpotAdding} markers={markers} setMarkers={setMarkers} />
+        <KakaoMap
+          isSpotAdding={isSpotAdding}
+          markers={markers}
+          setMarkers={setMarkers}
+          center={center}
+        />
       </div>
       {isSpotAdding && (
         <div className="spot-adding-notice">
@@ -354,11 +451,24 @@ const StoryRecord = () => {
           style={{ display: 'none' }}
         />
       </div>
+      {/* 기존 이미지 표시 */}
       <div className="image-preview-container">
+        {existingImages.map((image, index) => (
+          <div key={image.imageId} className="image-preview-item">
+            <img src={image.url} alt={`기존 이미지 ${index + 1}`} className="image-preview" />
+            <button
+              className="remove-image-button"
+              onClick={() => removeExistingImage(image.imageId)}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        {/* 새로 추가된 이미지 미리보기 */}
         {imagePreviews.map((preview, index) => (
           <div key={index} className="image-preview-item">
-            <img src={preview} alt={`썸네일 ${index + 1}`} className="image-preview" />
-            <button className="remove-image-button" onClick={() => removeImage(index)}>
+            <img src={preview} alt={`새 이미지 ${index + 1}`} className="image-preview" />
+            <button className="remove-image-button" onClick={() => removeNewImage(index)}>
               ✕
             </button>
           </div>
@@ -414,8 +524,8 @@ const StoryRecord = () => {
       <button onClick={handleSubmit} className="submit-button">
         완료
       </button>
-     
-     {/* <h3 className="saved-spot-title">저장된 Spot 정보:</h3>
+
+      <h3 className="saved-spot-title">저장된 Spot 정보:</h3>
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="droppable-markers">
           {(provided) => (
@@ -439,9 +549,8 @@ const StoryRecord = () => {
           )}
         </Droppable>
       </DragDropContext>
-     */}
     </div>
   );
 };
 
-export default StoryRecord;
+export default PlanRegist;

@@ -23,7 +23,7 @@ const MemoryPlanSelect = () => {
       <div className="option" onClick={() => handleOptionClick('mypage')}>
         2. 마이페이지 보기
       </div>
-      <FooterNav />
+   
     </div>
   );
 

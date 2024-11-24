@@ -23,6 +23,7 @@ const StoryDetail = () => {
 
   const [story, setStory] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [routePoints, setRoutePoints] = useState([]); // 추가된 상태 변수
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [liked, setLiked] = useState(null);
@@ -53,6 +54,10 @@ const StoryDetail = () => {
           setComments(storyData.comments || []);
           setLiked(storyData.liked);
           setFollowing(storyData.following);
+
+          // routePoints 상태 업데이트
+          const points = storyData.route?.routePoints || [];
+          setRoutePoints(points);
 
           // 스토리의 사진 데이터를 개별적으로 가져오기
           const photoPromises = storyData.photos.map((photo) =>
@@ -185,7 +190,6 @@ const StoryDetail = () => {
   const handleReference = () => {
     navigate(`/storyplan/${storyId}`);
   };
-  
 
   if (loading) {
     return <div>로딩 중...</div>;
@@ -215,26 +219,24 @@ const StoryDetail = () => {
 
       <div className="story-map">
         <h2>경로 지도</h2>
-        {photos && (
+        {routePoints.length > 0 && (
           <KakaoMap
             isSpotAdding={false}
-            markers={photos
-              .filter((photo) => !isNaN(photo.latitude) && !isNaN(photo.longitude))
-              .map((photo) => ({
-                lat: photo.latitude,
-                lng: photo.longitude,
-              }))}
+            markers={routePoints.map((point) => ({
+              lat: point.latitude,
+              lng: point.longitude,
+            }))}
             setMarkers={() => {}}
             center={
-              photos.length > 0 && !isNaN(photos[0].latitude) && !isNaN(photos[0].longitude)
-                ? { lat: photos[0].latitude, lng: photos[0].longitude }
+              !isNaN(routePoints[0].latitude) && !isNaN(routePoints[0].longitude)
+                ? { lat: routePoints[0].latitude, lng: routePoints[0].longitude }
                 : { lat: 37.283, lng: 127.046 }
             }
           />
         )}
       </div>
 
-      {photos && (
+      {photos && photos.length > 0 && (
         <div className="story-photos">
           <Slider {...sliderSettings}>
             {photos.map((photo) => (

@@ -1,7 +1,9 @@
 .mypage-container {
-    background-color: #ffe4e1;
-    padding: 20px;
-    border-radius: 10px;
+  background-color: #ffe4e1;
+  padding: 20px;
+  border-radius: 10px;
+  min-height: 100vh; /* 최소 높이를 뷰포트의 전체 높이로 설정 */
+  box-sizing: border-box; /* 패딩과 보더를 높이 계산에 포함 */
 }
   
 .profile-edit-container {
@@ -92,7 +94,8 @@
 }
 /* 수정 및 삭제 버튼 스타일 */
 .edit-button,
-.delete-button {
+.delete-button,
+.check-button {
   background-color: #ffb6c1;
   border: none;
   padding: 5px 10px;

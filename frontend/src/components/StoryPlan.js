@@ -5,19 +5,14 @@ import { getAddressFromCoords } from '../function/kakaoGeocoder';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import '../StoryPlan.css';
 import { useNavigate, useParams } from 'react-router-dom';
-import FooterNav from './Footernav';
 import axios from 'axios';
 
 const StoryPlan = () => {
   const navigate = useNavigate();
   const { storyId } = useParams(); // storyId를 URL에서 가져옵니다.
-  // const location = useLocation(); // location은 더 이상 사용하지 않습니다.
-  // const { markers: initialMarkers = [], hashtags: initialHashtags = [] } = location.state || {};
 
   const [title, setTitle] = useState('');
   const [memo, setMemo] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
   const [preference, setPreference] = useState(0);
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState([]); // 초기값을 빈 배열로 설정합니다.
@@ -82,26 +77,7 @@ const StoryPlan = () => {
     }
   }, [storyId]);
 
-  // 기존의 함수들과 로직은 그대로 유지됩니다.
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).filter(
-      (file) => file.type === 'image/jpeg' || file.type === 'image/png'
-    );
-    if (files.length > 0) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-      setImagePreviews((prevPreviews) => [
-        ...prevPreviews,
-        ...files.map((file) => URL.createObjectURL(file)),
-      ]);
-    }
-  };
-
-  // 나머지 함수들과 이벤트 핸들러들도 동일하게 유지됩니다.
-  const removeImage = (indexToRemove) => {
-    setSelectedFiles((prevFiles) => prevFiles.filter((_, index) => index !== indexToRemove));
-    setImagePreviews((prevPreviews) => prevPreviews.filter((_, index) => index !== indexToRemove));
-  };
-
+  // 이벤트 핸들러들
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleMemoChange = (e) => setMemo(e.target.value);
   const handlePreferenceChange = (newPreference) => setPreference(newPreference);
@@ -141,7 +117,7 @@ const StoryPlan = () => {
     const storyInfo = {
       userId: parseInt(user.userId),
       title: title.trim(),
-      memo: memo.trim(),
+      description: memo.trim(), // 필드명 수정 (memo → description)
       preference,
       visibility,
       planState: 'PLANNED',
@@ -149,9 +125,12 @@ const StoryPlan = () => {
       routePoints,
     };
 
+    console.log('StoryInfo to be sent:', storyInfo);
+
     try {
+      // 계획 중인 스토리 저장을 위한 API 엔드포인트 확인 필요
       const storyInfoResponse = await axios.post(
-        'http://localhost:8080/api/stories/info',
+        'http://localhost:8080/api/stories/info', // 엔드포인트 수정 필요 시 여기 수정
         storyInfo,
         {
           headers: {
@@ -163,28 +142,6 @@ const StoryPlan = () => {
       if (storyInfoResponse.status === 200) {
         console.log('스토리 정보 생성 성공:', storyInfoResponse.data);
         const savedStoryId = storyInfoResponse.data.savedStoryId;
-
-        // 이미지를 저장된 스토리에 추가
-        for (const file of selectedFiles) {
-          const formData = new FormData();
-          formData.append('image', file);
-
-          const imageResponse = await axios.post(
-            `http://localhost:8080/api/stories/${savedStoryId}/images`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
-
-          if (imageResponse.status === 200) {
-            console.log('이미지 추가 성공:', imageResponse.data);
-          } else {
-            console.error('예상치 못한 응답:', imageResponse);
-          }
-        }
 
         alert('추억 계획이 저장되었습니다!');
         navigate('/home');
@@ -244,30 +201,6 @@ const StoryPlan = () => {
         >
           {isSpotAdding ? '스팟추가모드 끄기' : '스팟추가모드'}
         </button>
-        <button
-          className="add-photo-button"
-          onClick={() => document.getElementById('fileUpload').click()}
-        >
-          사진추가
-        </button>
-        <input
-          type="file"
-          accept="image/jpeg,image/png"
-          multiple
-          onChange={handleFileChange}
-          id="fileUpload"
-          style={{ display: 'none' }}
-        />
-      </div>
-      <div className="image-preview-container">
-        {imagePreviews.map((preview, index) => (
-          <div key={index} className="image-preview-item">
-            <img src={preview} alt={`썸네일 ${index + 1}`} className="image-preview" />
-            <button className="remove-image-button" onClick={() => removeImage(index)}>
-              ✕
-            </button>
-          </div>
-        ))}
       </div>
       <textarea
         placeholder="메모를 입력하세요..."
@@ -331,7 +264,6 @@ const StoryPlan = () => {
       <button onClick={handleSubmit} className="submit-button">
         계획 저장하기
       </button>
-      <FooterNav />
     </div>
   );
 };

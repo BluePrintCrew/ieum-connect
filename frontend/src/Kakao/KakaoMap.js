@@ -1,84 +1,109 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import './KakaoMap.css';
 
-const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
+const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markerObjects = useRef([]);
+  const polylineObjects = useRef([]);
+
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [map, setMap] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
 
+  // 카카오 맵 스크립트 로드
   useEffect(() => {
     const script = document.createElement('script');
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.REACT_APP_KAKAO_APP_API_KEY}&autoload=false&libraries=services,clusterer,places`;
     script.async = true;
 
     script.onload = () => {
-      if (window.kakao && window.kakao.maps) {
-        window.kakao.maps.load(() => setIsMapLoaded(true));
-      } else {
-        console.error('카카오 맵 스크립트 로딩 실패');
-      }
+      window.kakao.maps.load(() => setIsMapLoaded(true));
     };
     document.head.appendChild(script);
     return () => document.head.removeChild(script);
   }, []);
 
+  // 맵 초기화
   useEffect(() => {
-    if (isMapLoaded) {
-      const mapContainer = document.getElementById('map');
+    if (isMapLoaded && !mapInstance.current) {
+      const initialCenter = markers.length > 0
+        ? new window.kakao.maps.LatLng(markers[0].lat, markers[0].lng)
+        : new window.kakao.maps.LatLng(37.5665, 126.9780); // 기본 좌표
+
       const mapOption = {
-        center: new window.kakao.maps.LatLng(center?.lat || 37.2838, center?.lng || 127.0454),
+        center: initialCenter,
         level: 5,
-        draggable: true,
-        scrollwheel: false,
-        disableDoubleClickZoom: true,
-        keyboardShortcuts: false,
-        minLevel: 3,
-        maxLevel: 7,
       };
-      const createdMap = new window.kakao.maps.Map(mapContainer, mapOption);
-      setMap(createdMap);
+      mapInstance.current = new window.kakao.maps.Map(mapRef.current, mapOption);
+    }
+  }, [isMapLoaded, markers]);
 
-      // Spot 추가 모드 설정
-      if (isSpotAdding) {
-        window.kakao.maps.event.addListener(createdMap, 'click', (mouseEvent) => {
-          const latlng = mouseEvent.latLng;
-          const newMarker = { lat: latlng.getLat(), lng: latlng.getLng() };
-          setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+  // 마커 및 경로 업데이트
+  useEffect(() => {
+    if (mapInstance.current) {
+      // 기존 마커와 경로 삭제
+      markerObjects.current.forEach((marker) => marker.setMap(null));
+      polylineObjects.current.forEach((polyline) => polyline.setMap(null));
+      markerObjects.current = [];
+      polylineObjects.current = [];
 
-          const marker = new window.kakao.maps.Marker({ position: latlng, map: createdMap });
-          window.kakao.maps.event.addListener(marker, 'click', () => {
-            marker.setMap(null);
-            setMarkers((prevMarkers) =>
-              prevMarkers.filter((m) => m.lat !== newMarker.lat || m.lng !== newMarker.lng)
-            );
-          });
+      // 새로운 마커 추가
+      markers.forEach((markerData) => {
+        const position = new window.kakao.maps.LatLng(markerData.lat, markerData.lng);
+        const marker = new window.kakao.maps.Marker({
+          map: mapInstance.current,
+          position,
         });
-      }
-
-      // 기존 마커 추가
-      markers.forEach((marker) => {
-        const markerPosition = new window.kakao.maps.LatLng(marker.lat, marker.lng);
-        new window.kakao.maps.Marker({
-          map: createdMap,
-          position: markerPosition,
-        });
+        markerObjects.current.push(marker);
       });
 
-      // 경로 표시
+      // 새로운 경로 추가
       if (markers.length > 1) {
         for (let i = 0; i < markers.length - 1; i++) {
           const start = markers[i];
           const end = markers[i + 1];
-          getWalkingRouteFromTmap(start, end, createdMap);
+          getWalkingRouteFromTmap(start, end);
         }
       }
-    }
-  }, [isMapLoaded, markers, isSpotAdding, center]);
 
-  const getWalkingRouteFromTmap = (start, end, map) => {
+      if (markers.length > 0) {
+        // 마커가 있으면 지도 범위 조정
+        const bounds = new window.kakao.maps.LatLngBounds();
+        markers.forEach((markerData) => {
+          bounds.extend(new window.kakao.maps.LatLng(markerData.lat, markerData.lng));
+        });
+        mapInstance.current.setBounds(bounds);
+      } else {
+        // 마커가 없으면 기본 중심 좌표로 설정
+        mapInstance.current.setCenter(new window.kakao.maps.LatLng(37.5665, 126.9780));
+        mapInstance.current.setLevel(5);
+      }
+    }
+  }, [markers]);
+
+  // Spot 추가 모드 변경 시 이벤트 리스너 추가/제거
+  useEffect(() => {
+    if (mapInstance.current) {
+      if (isSpotAdding) {
+        window.kakao.maps.event.addListener(mapInstance.current, 'click', handleMapClick);
+      } else {
+        window.kakao.maps.event.removeListener(mapInstance.current, 'click', handleMapClick);
+      }
+    }
+  }, [isSpotAdding]);
+
+
+  const handleMapClick = (mouseEvent) => {
+    const latlng = mouseEvent.latLng;
+    const newMarker = { lat: latlng.getLat(), lng: latlng.getLng() };
+    setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
+  };
+
+  const getWalkingRouteFromTmap = (start, end) => {
     const url = `https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json`;
 
     axios
@@ -120,7 +145,8 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
             strokeOpacity: 0.7,
             strokeStyle: 'solid',
           });
-          polyline.setMap(map);
+          polyline.setMap(mapInstance.current);
+          polylineObjects.current.push(polyline);
         } else {
           console.warn('Tmap에서 경로 데이터를 가져오지 못했습니다.');
         }
@@ -130,7 +156,6 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
       });
   };
 
-  // 검색 기능 구현
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -147,7 +172,7 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
 
     ps.keywordSearch(keyword, (data, status) => {
       if (status === window.kakao.maps.services.Status.OK) {
-        setSearchResults(data); // 검색 결과 저장
+        setSearchResults(data);
       } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
         alert('검색 결과가 없습니다.');
         setSearchResults([]);
@@ -160,16 +185,14 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
 
   const handleResultClick = (place) => {
     const newCenter = new window.kakao.maps.LatLng(place.y, place.x);
-    map.setCenter(newCenter);
+    mapInstance.current.setCenter(newCenter);
 
-    // 검색 결과 목록 숨기기
     setSearchResults([]);
     setIsSearchBarVisible(false);
   };
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '400px' }}>
-      {/* 돋보기 아이콘 */}
       <button
         className="map-search-button"
         onClick={() => setIsSearchBarVisible(!isSearchBarVisible)}
@@ -177,7 +200,6 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
         🔍
       </button>
 
-      {/* 검색바 */}
       {isSearchBarVisible && (
         <form onSubmit={handleSearchSubmit} className="map-search-bar">
           <input
@@ -190,7 +212,6 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
         </form>
       )}
 
-      {/* 검색 결과 목록 */}
       {isSearchBarVisible && searchResults.length > 0 && (
         <ul className="map-search-results">
           {searchResults.map((place, index) => (
@@ -205,8 +226,7 @@ const KakaoMap = ({ center, isSpotAdding, markers, setMarkers }) => {
         </ul>
       )}
 
-      {/* 맵 컨테이너 */}
-      <div id="map" style={{ width: '100%', height: '100%' }}></div>
+      <div id="map" ref={mapRef} style={{ width: '100%', height: '100%' }}></div>
     </div>
   );
 };

@@ -13,7 +13,6 @@ const FooterNav = () => {
       <button onClick={() => navigate('/mypage')}>마이<br></br>페이지</button>
     </div>
   );
-  
 };
 
 export default FooterNav;
