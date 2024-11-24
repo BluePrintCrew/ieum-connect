@@ -1,5 +1,6 @@
+// StoryDetail.js
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import axios from 'axios';
 import KakaoMap from '../Kakao/KakaoMap';
 import '../storydetail.css';
@@ -18,6 +19,7 @@ const axiosInstance = axios.create({
 const StoryDetail = () => {
   const { storyId } = useParams();
   const currentUserId = parseInt(JSON.parse(localStorage.getItem('user'))?.userId, 10);
+  const navigate = useNavigate(); // navigate 초기화
 
   const [story, setStory] = useState(null);
   const [photos, setPhotos] = useState([]);
@@ -180,6 +182,11 @@ const StoryDetail = () => {
     }
   };
 
+  const handleReference = () => {
+    navigate(`/storyplan/${storyId}`);
+  };
+  
+
   if (loading) {
     return <div>로딩 중...</div>;
   }
@@ -250,7 +257,9 @@ const StoryDetail = () => {
         <button className="follow-button" onClick={handleFollow}>
           {following ? '팔로우 취소' : '팔로우'}
         </button>
-        <button className="reference-button">따라하기</button>
+        <button className="reference-button" onClick={handleReference}>
+          따라하기
+        </button>
       </div>
 
       <div className="preference-container">
