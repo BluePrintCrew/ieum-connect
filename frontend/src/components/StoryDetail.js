@@ -215,8 +215,6 @@ const StoryDetail = () => {
         <span>작성일: {new Date(story.createdAt).toLocaleString()}</span>
       </div>
 
-      <div className="story-content">{story.description}</div>
-
       <div className="story-map">
         <h2>경로 지도</h2>
         {routePoints.length > 0 && (
@@ -254,7 +252,6 @@ const StoryDetail = () => {
           <button className="like-button" onClick={handleLike}>
             {liked ? '좋아요 취소' : '좋아요'}
           </button>
-          <span>좋아요 {likes}개</span>
         </div>
         <button className="follow-button" onClick={handleFollow}>
           {following ? '팔로우 취소' : '팔로우'}
@@ -263,7 +260,8 @@ const StoryDetail = () => {
           따라하기
         </button>
       </div>
-
+      <div className="like-count">  <span>좋아요 {likes}개</span></div>
+      <div className="story-content">{story.description}</div>
       <div className="preference-container">
         {[1, 2, 3].map((level) => (
           <span
@@ -274,7 +272,7 @@ const StoryDetail = () => {
           </span>
         ))}
       </div>
-
+     
       <div className="hashtag-container">
         {story.hashtags.map((hashtag, index) => (
           <span key={index} className="hashtag">{`#${hashtag}`}</span>

@@ -62,7 +62,6 @@ const StoryPlan = () => {
 
           // orderNum을 기준으로 마커를 정렬합니다.
           updatedMarkers.sort((a, b) => a.orderNum - b.orderNum);
-
           setMarkers(updatedMarkers);
         } else {
           console.error('스토리 데이터를 가져오는 데 실패했습니다.');

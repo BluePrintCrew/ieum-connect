@@ -167,7 +167,7 @@ const [nickname, setNickname] = useState('');
         )}
       </div>
 
-      <FooterNav />
+ 
     </div>
   );
 };
