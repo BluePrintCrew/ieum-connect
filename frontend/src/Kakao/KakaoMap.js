@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import './KakaoMap.css';
@@ -27,7 +26,7 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
     return () => document.head.removeChild(script);
   }, []);
 
-  // 맵 초기화
+  // 초기 맵 인스턴스 생성
   useEffect(() => {
     if (isMapLoaded && !mapInstance.current) {
       const initialCenter = markers.length > 0
@@ -39,8 +38,16 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
         level: 5,
       };
       mapInstance.current = new window.kakao.maps.Map(mapRef.current, mapOption);
+
+      // Spot 추가 모드 변경 시 이벤트 리스너 추가/제거
+      if (isSpotAdding) {
+        window.kakao.maps.event.addListener(mapInstance.current, 'click', handleMapClick);
+      }
+
+      // 카카오 맵 로드 완료 로그
+      console.log('카카오 맵이 로드되었습니다:', mapInstance.current);
     }
-  }, [isMapLoaded, markers]);
+  }, [isMapLoaded]);
 
   // 마커 및 경로 업데이트
   useEffect(() => {
@@ -96,13 +103,14 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
     }
   }, [isSpotAdding]);
 
-
+  // 지도 클릭 핸들러
   const handleMapClick = (mouseEvent) => {
     const latlng = mouseEvent.latLng;
     const newMarker = { lat: latlng.getLat(), lng: latlng.getLng() };
     setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
   };
 
+  // Tmap 도보 경로 요청 함수
   const getWalkingRouteFromTmap = (start, end) => {
     const url = `https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json`;
 

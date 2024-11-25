@@ -1,5 +1,3 @@
-// PlanRegist.js
-
 import React, { useState, useEffect, useRef } from 'react';
 import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
@@ -12,7 +10,7 @@ import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
 const PlanRegist = () => {
-  const { storyId } = useParams(); // URL에서 storyId 가져오기
+  const { storyId } = useParams();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -22,22 +20,21 @@ const PlanRegist = () => {
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState([]);
   const [markers, setMarkers] = useState([]);
-  const [addresses, setAddresses] = useState([]);
   const [visibility, setVisibility] = useState('PUBLIC');
 
-  const [selectedFiles, setSelectedFiles] = useState([]); // 새로 추가된 이미지 파일들
-  const [imagePreviews, setImagePreviews] = useState([]); // 새로 추가된 이미지 미리보기
-  const [existingImages, setExistingImages] = useState([]); // 기존 이미지 정보
-  const [imagesToDelete, setImagesToDelete] = useState([]); // 삭제할 이미지 ID 목록
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
 
   const [model, setModel] = useState(null);
   const [recommendedKeywords, setRecommendedKeywords] = useState([]);
   const isUpdatingKeywords = useRef(false);
   const detectedLabelsSet = useRef(new Set());
   const [isSpotAdding, setIsSpotAdding] = useState(false);
-  const [loading, setLoading] = useState(true); // 로딩 상태 추가
-
-  const [center, setCenter] = useState(null); // 지도 중심 상태 추가
+  const [loading, setLoading] = useState(true);
+  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
+  const [addressesUpdated, setAddressesUpdated] = useState(false);
 
   // 모델 로드
   useEffect(() => {
@@ -51,52 +48,44 @@ const PlanRegist = () => {
       }
     };
     loadModel();
-  }, []);
+  }, []); 
 
   // 스토리 데이터 가져오기
   useEffect(() => {
     const fetchStoryData = async () => {
+      if (!storyId) {
+        setLoading(false); // storyId가 없는 경우 로딩 중 상태 해제
+        return;
+      }
+
       try {
         const response = await axios.get(`http://localhost:8080/api/stories/${storyId}`);
         const storyData = response.data;
 
         // 상태 변수에 데이터 설정
-        setTitle(storyData.title);
-        setMemo(storyData.memo);
-        setPreference(storyData.preference);
-        setHashtags(storyData.hashtags);
-        setVisibility(storyData.visibility);
+        setTitle(storyData.title || '');
+        setMemo(storyData.memo || '');
+        setPreference(storyData.preference || 0);
+        setHashtags(storyData.hashtags || []);
+        setVisibility(storyData.visibility || 'PUBLIC');
 
         // 마커 설정
         const routePoints = storyData.route?.routePoints || [];
-        const newMarkers = routePoints.map((point) => ({
+        const initialMarkers = routePoints.map((point) => ({
           lat: point.latitude,
           lng: point.longitude,
-          address: point.address || '', // 주소가 있다면 설정
+          orderNum: point.orderNum,
         }));
-        console.log('마커 데이터:', newMarkers);
-        setMarkers(newMarkers);
 
+        setMarkers(initialMarkers);
+        
         // 지도 중심 설정
-        if (newMarkers.length > 0) {
+        if (initialMarkers.length > 0) {
           setCenter({
-            lat: newMarkers[0].lat,
-            lng: newMarkers[0].lng,
-          });
-        } else {
-          // 마커가 없을 경우 기본 위치 설정
-          setCenter({
-            lat: 37.5665,
-            lng: 126.9780,
+            lat: initialMarkers[0].lat,
+            lng: initialMarkers[0].lng,
           });
         }
-
-        // 기존 이미지 설정
-        const imageInfos = storyData.photos.map((photo) => ({
-          imageId: photo.imageId,
-          url: photo.url,
-        }));
-        setExistingImages(imageInfos);
       } catch (error) {
         console.error('스토리 데이터 가져오는 중 오류 발생:', error);
       } finally {
@@ -104,12 +93,30 @@ const PlanRegist = () => {
       }
     };
 
-    if (storyId) {
-      fetchStoryData();
-    } else {
-      setLoading(false);
-    }
+    fetchStoryData();
   }, [storyId]);
+
+  useEffect(() => {
+    const updateMarkersWithAddresses = async () => {
+      if (markers.length > 0 && !addressesUpdated) {
+        const updatedMarkers = await Promise.all(
+          markers.map(async (marker) => {
+            const address = await new Promise((resolve) => {
+              getAddressFromCoords(marker.lat, marker.lng, (addr) => {
+                resolve(addr);
+              });
+            });
+            return { ...marker, address };
+          })
+        );
+
+        setMarkers(updatedMarkers);
+        setAddressesUpdated(true);
+      }
+    };
+
+    updateMarkersWithAddresses();
+  }, [markers, addressesUpdated]);
 
   // 이미지 처리 함수들
   const handleFileChange = async (e) => {
@@ -160,13 +167,7 @@ const PlanRegist = () => {
           address,
         };
         setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
-        setAddresses((prevAddresses) => [...prevAddresses, address]);
-
-        // 지도 중심 업데이트
-        setCenter({
-          lat: data.latitude,
-          lng: data.longitude,
-        });
+        setAddressesUpdated(false); // 새로운 마커가 추가되었으므로 주소 업데이트 플래그 초기화
       });
     } else {
       console.warn('위도 및 경도 정보가 없습니다. EXIF 데이터:', data);
@@ -316,7 +317,7 @@ const PlanRegist = () => {
 
     const routePoints = convertMarkersToRoutePoints();
     const storyInfo = {
-      userId: parseInt(user.userId), // 사용자 ID
+      userId: parseInt(user.userId),
       title: title.trim(),
       memo: memo.trim(),
       preference,
@@ -328,8 +329,8 @@ const PlanRegist = () => {
 
     try {
       // 스토리 정보 업데이트
-      const storyInfoResponse = await axios.put(
-        `http://localhost:8080/api/stories/${storyId}/info`,
+      const storyInfoResponse = await axios.post(
+        `http://localhost:8080/api/stories/info`,
         storyInfo,
         {
           headers: {
@@ -340,6 +341,7 @@ const PlanRegist = () => {
 
       if (storyInfoResponse.status === 200) {
         console.log('스토리 정보 업데이트 성공:', storyInfoResponse.data);
+        const savedStoryId = storyInfoResponse.data.savedStoryId;
 
         // 삭제할 이미지 삭제
         for (const imageId of imagesToDelete) {
@@ -352,7 +354,7 @@ const PlanRegist = () => {
           formData.append('image', file);
 
           const imageResponse = await axios.post(
-            `http://localhost:8080/api/stories/${storyId}/images`,
+            `http://localhost:8080/api/stories/${savedStoryId}/images`,
             formData,
             {
               headers: {
@@ -392,7 +394,7 @@ const PlanRegist = () => {
     setMarkers(updatedMarkers);
   };
 
-  if (loading || !center) {
+  if (loading) {
     return <div>로딩 중...</div>;
   }
 
@@ -403,7 +405,7 @@ const PlanRegist = () => {
         type="text"
         placeholder="제목을 입력하세요"
         value={title}
-        onChange={handleTitleChange}
+        onChange={(e) => setTitle(e.target.value)}
         className="title-input"
       />
       <div className="visibility-container">
@@ -477,7 +479,7 @@ const PlanRegist = () => {
       <textarea
         placeholder="메모를 입력하세요... "
         value={memo}
-        onChange={handleMemoChange}
+        onChange={(e) => setMemo(e.target.value)}
         className="memo-textarea"
       />
       <div className="preference-container">
