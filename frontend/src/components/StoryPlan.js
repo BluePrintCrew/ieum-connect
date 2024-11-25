@@ -116,7 +116,7 @@ const StoryPlan = () => {
     const storyInfo = {
       userId: parseInt(user.userId),
       title: title.trim(),
-      description: memo.trim(), // 필드명 수정 (memo → description)
+      memo: memo.trim(), // 필드명 수정 (memo → description)
       preference,
       visibility,
       planState: 'PLANNED',

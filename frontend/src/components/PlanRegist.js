@@ -61,10 +61,11 @@ const PlanRegist = () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/stories/${storyId}`);
         const storyData = response.data;
+        console.log('스토리 데이터:', storyData);
 
         // 상태 변수에 데이터 설정
         setTitle(storyData.title || '');
-        setMemo(storyData.memo || '');
+        setMemo(storyData.description || '');
         setPreference(storyData.preference || 0);
         setHashtags(storyData.hashtags || []);
         setVisibility(storyData.visibility || 'PUBLIC');
@@ -479,7 +480,7 @@ const PlanRegist = () => {
       <textarea
         placeholder="메모를 입력하세요... "
         value={memo}
-        onChange={handleMemoChange}
+        onChange= {(e) => setMemo(e.target.value)}
         className="memo-textarea"
       />
       <div className="preference-container">
