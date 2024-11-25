@@ -7,8 +7,12 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create # application 첫 실행 시에만 create, 이후에는 none 혹은 주석처리
+      ddl-auto: create-drop # application 첫 실행 시에만 create, 이후에는 none 혹은 주석처리
     show-sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
 
 springdoc:
   version: '0.0.1'

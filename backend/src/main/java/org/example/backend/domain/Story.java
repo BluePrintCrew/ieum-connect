@@ -1,8 +1,7 @@
 package org.example.backend.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,6 +11,9 @@ import java.util.List;
 @Getter
 @Setter
 @Table(name = "memories")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Story {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,13 +53,17 @@ public class Story {
     @OneToOne(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     private Route route;
 
+
     // 좋아요 수를 저장하는 필드 추가
+    @Builder.Default
     @Column(name = "like_count", columnDefinition = "integer default 0")
     private Integer likeCount = 0;
 
+    @Builder.Default
     @OneToMany(mappedBy = "story", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<Like> likes = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "story", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 

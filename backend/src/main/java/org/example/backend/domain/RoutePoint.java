@@ -1,8 +1,7 @@
 package org.example.backend.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -10,6 +9,9 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Table(name = "route_points")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RoutePoint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

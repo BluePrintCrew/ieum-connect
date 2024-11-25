@@ -1,8 +1,7 @@
 package org.example.backend.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +10,9 @@ import java.util.List;
 @Table(name = "routes")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Route {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,10 +28,12 @@ public class Route {
 
     // 하나의 경로는 여러가지 spot을 가질 수 있다.
     // 그리고 경로가 삭제 될 시 여러개의 spot도 자동 삭제된다.
+    @Builder.Default
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoutePoint> routePoints = new ArrayList<>();
 
     // 다대다 관계 -> 해시테그 하나도 여러개의 route를 가질 수 있고, route 또한 여러개의 hashtag를 가질 수 있다.
+    @Builder.Default
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "route_hashtags",

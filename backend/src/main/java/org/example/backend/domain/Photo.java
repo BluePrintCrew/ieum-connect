@@ -1,8 +1,7 @@
 package org.example.backend.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +12,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "photos")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Photo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
