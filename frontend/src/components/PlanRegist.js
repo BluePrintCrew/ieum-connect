@@ -479,7 +479,7 @@ const PlanRegist = () => {
       <textarea
         placeholder="메모를 입력하세요... "
         value={memo}
-        onChange={(e) => setMemo(e.target.value)}
+        onChange={handleMemoChange}
         className="memo-textarea"
       />
       <div className="preference-container">

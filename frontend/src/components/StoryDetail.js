@@ -211,7 +211,7 @@ const StoryDetail = () => {
     <div className="story-detail-container">
       <h1 className="story-title">{story.title}</h1>
       <div className="story-info">
-        <span>작성자: {story.user.username}</span>
+        <span>작성자: {story.user.nickname}</span>
         <span>작성일: {new Date(story.createdAt).toLocaleString()}</span>
       </div>
 
