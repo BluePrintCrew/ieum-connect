@@ -226,7 +226,7 @@ const PlanRegist = () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
     await recommendKeywords(
-      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요."
+      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어 산, 바다, 하늘, 풍경스타그램, 여행"
     );
     isUpdatingKeywords.current = false;
   };
