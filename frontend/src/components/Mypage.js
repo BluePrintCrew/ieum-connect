@@ -3,7 +3,8 @@ import '../Mypage.css';
 import { useNavigate } from 'react-router-dom';
 import FooterNav from './Footernav';
 import axios from 'axios';
-import CantFollowing from './CantFollowing'; // 모달 컴포넌트 임포트
+import CantFollowing from './CantFollowing'; // 기존 모달 컴포넌트 임포트
+import EditNicknameModal from './EditNicknameModal'; // 새로 만든 모달 컴포넌트 임포트
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8080',
@@ -18,13 +19,15 @@ const MyPage = () => {
   // 로컬 스토리지에서 현재 로그인한 사용자 정보 가져오기
   const userData = JSON.parse(localStorage.getItem('user'));
   const currentUserId = parseInt(userData?.userId, 10); // 현재 로그인한 사용자의 ID
-  const username = userData?.username || '닉네임';
-
+  const [nickname, setNickname] = useState(userData?.nickname || '닉네임'); // nickname 상태 추가
+  const [username, setUsername] = useState(userData?.username || 'username'); // username 상태 유지
   const [myStories, setMyStories] = useState([]);
   const [likedStories, setLikedStories] = useState([]);
   const [plannedStories, setPlannedStories] = useState([]); // 계획 중인 스토리 상태 추가
   const [following, setFollowing] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 창 상태
+  const [isModalOpen, setIsModalOpen] = useState(false); // 기존 팔로우 관련 모달 창 상태
+  const [isEditNicknameModalOpen, setIsEditNicknameModalOpen] = useState(false); // 새 닉네임 편집 모달 창 상태
+  const [isUpdatingNickname, setIsUpdatingNickname] = useState(false); // 닉네임 업데이트 로딩 상태
 
   // 나의 추억 모음 데이터 가져오기
   const fetchMyStories = async () => {
@@ -120,7 +123,7 @@ const MyPage = () => {
       fetchPlannedStories(); // 계획 중인 스토리 데이터 가져오기
       fetchFollowing();
     } else {
-      console.error('User ID is not available in localStorage');
+      console.error('User ID가 localStorage에 없습니다.');
     }
   }, [currentUserId]);
 
@@ -167,9 +170,33 @@ const MyPage = () => {
         followUser(storyUserId);
       }
     } else if (storyUserId === currentUserId) {
-      setIsModalOpen(true); // 모달 창 표시
+      setIsModalOpen(true); // 기존 팔로우 관련 모달 창 표시
     } else {
       console.error('작성자 ID가 없습니다.');
+    }
+  };
+
+  // 닉네임 업데이트 함수
+  const updateNickname = async (newNickname) => {
+    try {
+      setIsUpdatingNickname(true); // 로딩 상태 시작
+      const response = await axiosInstance.post('/api/user/nickname', {
+        nickname: newNickname,
+        userId: currentUserId,
+      });
+      if (response.status === 200) {
+        setNickname(newNickname); // nickname 상태 업데이트
+        // 로컬 스토리지 업데이트
+        const updatedUserData = { ...userData, nickname: newNickname };
+        localStorage.setItem('user', JSON.stringify(updatedUserData));
+        alert('닉네임이 성공적으로 업데이트되었습니다.');
+        setIsEditNicknameModalOpen(false);
+      }
+    } catch (error) {
+      console.error('닉네임 업데이트 중 오류 발생:', error.response ? error.response.data : error);
+      alert('닉네임 업데이트에 실패했습니다.');
+    } finally {
+      setIsUpdatingNickname(false); // 로딩 상태 종료
     }
   };
 
@@ -178,12 +205,15 @@ const MyPage = () => {
       {/* 상단: 닉네임과 프로필 편집 */}
       <div className="profile-edit-container">
         <div className="nickname" style={{ textAlign: 'left' }}>
-          {username}
+          {nickname} {/* nickname을 표시 */}
         </div>
-        <button className="profile-edit-button" onClick={() => navigate('/edit-profile')}>
+        <button
+          className="profile-edit-button"
+          onClick={() => setIsEditNicknameModalOpen(true)}
+        >
           프로필 편집
         </button>
-      </div>
+      </div> 
 
       {/* 나의 추억 모음 */}
       <h2 className="mypage-title">나의 추억 모음</h2>
@@ -284,6 +314,15 @@ const MyPage = () => {
 
       {/* 자신을 팔로우하려는 경우 모달 창 */}
       <CantFollowing isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+      {/* 닉네임 수정 모달 */}
+      <EditNicknameModal
+        isOpen={isEditNicknameModalOpen}
+        onClose={() => setIsEditNicknameModalOpen(false)}
+        currentNickname={nickname}
+        onSave={updateNickname}
+        isUpdating={isUpdatingNickname} // 로딩 상태 전달
+      />
 
       {/* Footer Navigation */}
       <FooterNav />
