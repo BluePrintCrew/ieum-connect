@@ -25,7 +25,7 @@ public class User {
     private String kakaoId;
 
 
-    @Column( name = "user_name")
+    @Column( name = "username")
     private String username;
 
     private String nickname;
