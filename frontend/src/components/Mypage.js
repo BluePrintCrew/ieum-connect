@@ -156,9 +156,14 @@ const MyPage = () => {
     }
   };
 
-  // 계획 중 스토리 기록하기로 이동
-  const handleRecordPlannedStory = (storyId) => {
-    navigate(`/storyplan/regist/${storyId}`);
+   // 계획 중 스토리 기록하기로 이동
+   const handleRecordPlannedStory = (storyId) => {
+    navigate(`/story/edit?mod=regist&storyId=${storyId}`);
+  };
+
+  // 계획 중 스토리 수정하기로 이동 (예시)
+  const handleEditPlannedStory = (storyId) => {
+    navigate(`/story/edit?mod=edit&storyId=${storyId}`);
   };
 
   const handleFollowButtonClick = (e, storyUserId) => {
@@ -230,7 +235,7 @@ const MyPage = () => {
               <span className="likes">좋아요 {story.likeCount}개</span>
               <button
                 className="edit-button"
-                onClick={() => navigate(`/story/edit/${story.storyId}`)}
+                onClick={() => handleEditPlannedStory(story.storyId)} // 수정 버튼 클릭 시 StoryEdit 페이지로 이동
               >
                 수정
               </button>
@@ -270,8 +275,8 @@ const MyPage = () => {
                   {storyUserId === currentUserId
                     ? '팔로우'
                     : isFollowing
-                    ? '언팔로우'
-                    : '팔로우'}
+                      ? '언팔로우'
+                      : '팔로우'}
                 </button>
               </li>
             );

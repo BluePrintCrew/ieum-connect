@@ -13,6 +13,7 @@ import PlanRegist from './components/PlanRegist.js';
 import './App.css'; // 애니메이션 관련 CSS 포함
 import MemoryPlanSelect from './components/MemoryPlanSelect.js';
 import StoryPlan from './components/StoryPlan.js';
+import StoryEdit from './components/StoryEdit.js';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -33,7 +34,7 @@ function AnimatedRoutes() {
               <Route path="/memory-plan/select" element={<MemoryPlanSelect />} />
               <Route path="/story/detail/:storyId" element={<Detail />} />
               <Route path="/storyplan/:storyId" element={<StoryPlan />} />
-              <Route path="/storyplan/regist/:storyId" element={<PlanRegist />} />
+              <Route path="/story/edit" element={<PlanRegist />} />
             </Routes>
           </CSSTransition>
         </TransitionGroup>

@@ -1,52 +1,42 @@
+// src/components/StoryEdit.js
+
 import React, { useState, useEffect, useRef } from 'react';
 import KakaoMap from '../Kakao/KakaoMap';
 import { extractExifData } from '../function/exif';
 import { getAddressFromCoords } from '../function/kakaoGeocoder';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import '../storyrecord.css';
-import { useNavigate, useLocation } from 'react-router-dom';
+import '../storyrecord.css'; // 기존 스타일 재사용
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
-// axiosInstance 중복 제거
-const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-const PlanRegist = () => {
+const StoryEdit = () => {
+  const { storyId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user'));
 
-  // Query Parameters에서 mod와 storyId 추출
-  const queryParams = new URLSearchParams(location.search);
-  const mod = queryParams.get('mod'); // 'regist' 또는 'edit'
-  const storyId = queryParams.get('storyId');
-
-  // 상태 변수 정의
   const [title, setTitle] = useState('');
   const [memo, setMemo] = useState('');
   const [preference, setPreference] = useState(0);
-  const [hashtags, setHashtags] = useState([]);
   const [hashtagInput, setHashtagInput] = useState('');
+  const [hashtags, setHashtags] = useState([]);
   const [markers, setMarkers] = useState([]);
   const [visibility, setVisibility] = useState('PUBLIC');
+
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
+
   const [model, setModel] = useState(null);
   const [recommendedKeywords, setRecommendedKeywords] = useState([]);
+  const isUpdatingKeywords = useRef(false);
+  const detectedLabelsSet = useRef(new Set());
   const [isSpotAdding, setIsSpotAdding] = useState(false);
   const [loading, setLoading] = useState(true);
-  const detectedLabelsSet = useRef(new Set());
-  const isUpdatingKeywords = useRef(false);
+  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
   const [addressesUpdated, setAddressesUpdated] = useState(false);
-  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 });
 
   // 모델 로드
   useEffect(() => {
@@ -62,71 +52,73 @@ const PlanRegist = () => {
     loadModel();
   }, []);
 
-  // 스토리 데이터 가져오기 (등록/수정 모드 공통)
+  // 스토리 데이터 가져오기
   useEffect(() => {
-    if (storyId) {
-      const fetchStoryData = async () => {
-        try {
-          const response = await axiosInstance.get(`/api/stories/${storyId}`);
-          const storyData = response.data;
+    const fetchStoryData = async () => {
+      if (!storyId) {
+        setLoading(false); // storyId가 없는 경우 로딩 중 상태 해제
+        return;
+      }
 
-          setTitle(storyData.title);
-          setMemo(storyData.description);
-          setPreference(storyData.preference);
-          setHashtags(storyData.hashtags);
-          setVisibility(storyData.visibility);
-          setMarkers(
-            storyData.route?.routePoints.map((point) => ({
-              lat: point.latitude,
-              lng: point.longitude,
-              orderNum: point.orderNum,
-            })) || []
-          );
+      try {
+        const response = await axios.get(`http://localhost:8080/api/stories/${storyId}`);
+        const storyData = response.data;
+        console.log('스토리 데이터:', storyData);
 
-          // 스토리의 사진 데이터를 개별적으로 가져오기
-          const photoPromises = storyData.photos.map((photo) =>
-            axiosInstance.get(`/api/photos/${photo.photoId}`, {
-              responseType: 'blob',
-            })
-          );
-          const photoResponses = await Promise.all(photoPromises);
-          const photoData = photoResponses.map((res, index) => ({
-            photoUrl: URL.createObjectURL(res.data),
-            photoId: storyData.photos[index].photoId,
-          }));
-          setExistingImages(photoData);
+        // 상태 변수에 데이터 설정
+        setTitle(storyData.title || '');
+        setMemo(storyData.description || '');
+        setPreference(storyData.preference || 0);
+        setHashtags(storyData.hashtags || []);
+        setVisibility(storyData.visibility || 'PUBLIC');
 
-          // 지도 중심 설정
-          if (storyData.route?.routePoints.length > 0) {
-            setCenter({
-              lat: storyData.route.routePoints[0].latitude,
-              lng: storyData.route.routePoints[0].longitude,
-            });
-          }
-        } catch (error) {
-          console.error('스토리 데이터를 가져오는 중 오류 발생:', error);
-        } finally {
-          setLoading(false);
+        // 마커 설정
+        const routePoints = storyData.route?.routePoints || [];
+        const initialMarkers = routePoints.map((point) => ({
+          lat: point.latitude,
+          lng: point.longitude,
+          orderNum: point.orderNum,
+          address: point.address || '',
+        }));
+
+        setMarkers(initialMarkers);
+
+        // 기존 이미지 설정
+        setExistingImages(storyData.images || []);
+
+        // 지도 중심 설정
+        if (initialMarkers.length > 0) {
+          setCenter({
+            lat: initialMarkers[0].lat,
+            lng: initialMarkers[0].lng,
+          });
         }
-      };
-      fetchStoryData();
-    } else {
-      setLoading(false);
-    }
-  }, [storyId]);
+      } catch (error) {
+        console.error('스토리 데이터 가져오는 중 오류 발생:', error);
+        alert('스토리 데이터를 불러오는 데 실패했습니다.');
+        navigate('/mypage'); // 오류 시 마이페이지로 이동
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 주소 업데이트
+    fetchStoryData();
+  }, [storyId, navigate]);
+
   useEffect(() => {
     const updateMarkersWithAddresses = async () => {
       if (markers.length > 0 && !addressesUpdated) {
         const updatedMarkers = await Promise.all(
           markers.map(async (marker) => {
-            const address = await new Promise((resolve) => {
-              getAddressFromCoords(marker.lat, marker.lng, (addr) => {
-                resolve(addr);
+            if (!marker.address) {
+              const address = await new Promise((resolve) => {
+                getAddressFromCoords(marker.lat, marker.lng, (addr) => {
+                  resolve(addr);
+                });
               });
-            });
-            return { ...marker, address };
+              return { ...marker, address };
+            }
+            return marker;
           })
         );
 
@@ -136,7 +128,9 @@ const PlanRegist = () => {
     };
 
     updateMarkersWithAddresses();
-  }, [markers, addressesUpdated]);  // 이미지 처리 함수들
+  }, [markers, addressesUpdated]);
+
+  // 이미지 처리 함수들
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files).filter(
       (file) => file.type === 'image/jpeg' || file.type === 'image/png'
@@ -324,10 +318,6 @@ const PlanRegist = () => {
       alert('제목과 메모는 필수 입력 사항입니다.');
       return;
     }
-    if (selectedFiles.length === 0 && existingImages.length === 0) {
-      alert('이미지를 하나 이상 업로드해야 합니다.');
-      return;
-    }
     if (markers.length === 0) {
       alert('경로에 최소 하나 이상의 스팟이 필요합니다.');
       return;
@@ -340,54 +330,38 @@ const PlanRegist = () => {
       memo: memo.trim(),
       preference,
       visibility,
-      planState: 'PUBLISH',
+      planState: 'PUBLISH', // 'PLANNED' 대신 'PUBLISH'로 설정
       hashtags: hashtags.filter(Boolean),
       routePoints,
     };
 
     try {
-      let storyInfoResponse;
-
-      if (mod === 'edit' && storyId) {
-        // 수정 모드의 경우 PUT 요청
-        storyInfoResponse = await axios.put(
-          `http://localhost:8080/api/stories/${storyId}/info`,
-          storyInfo,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-      } else {
-        // 등록 모드의 경우 POST 요청
-        storyInfoResponse = await axios.post(
-          `http://localhost:8080/api/stories/info`,
-          storyInfo,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-      }
+      // 스토리 정보 업데이트 (PUT 요청)
+      const storyInfoResponse = await axios.put(
+        `http://localhost:8080/api/stories/${storyId}`,
+        storyInfo,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (storyInfoResponse.status === 200) {
         console.log('스토리 정보 업데이트 성공:', storyInfoResponse.data);
-        const savedStoryId = storyInfoResponse.data.savedStoryId;
 
         // 삭제할 이미지 삭제
         for (const imageId of imagesToDelete) {
-          await axios.delete(`http://localhost:8080/api/stories/${savedStoryId}/images/${imageId}`);
+          await axios.delete(`http://localhost:8080/api/stories/${storyId}/images/${imageId}`);
         }
 
-        // 새로 추가된 이미지 업로드
+        // 새로 추가된 이미지 업로드 (선택적)
         for (const file of selectedFiles) {
           const formData = new FormData();
           formData.append('image', file);
 
           const imageResponse = await axios.post(
-            `http://localhost:8080/api/stories/${savedStoryId}/images`,
+            `http://localhost:8080/api/stories/${storyId}/images`,
             formData,
             {
               headers: {
@@ -408,11 +382,15 @@ const PlanRegist = () => {
         navigate('/home');
       } else {
         console.error('예상치 못한 응답:', storyInfoResponse);
+        alert('스토리 업데이트에 실패했습니다. 다시 시도해 주세요.');
       }
     } catch (error) {
       console.error('스토리 제출 중 오류 발생:', error);
       if (error.response && error.response.data) {
         console.error('서버 응답 메시지:', error.response.data);
+        alert(`스토리 업데이트에 실패했습니다: ${error.response.data.message}`);
+      } else {
+        alert('스토리 업데이트에 실패했습니다. 다시 시도해 주세요.');
       }
     }
   };
@@ -433,7 +411,7 @@ const PlanRegist = () => {
 
   return (
     <div className="storyrecord-container">
-      <h1 className="storyrecord-title">{mod === 'regist' ? '스토리 기록하기' : '스토리 수정하기'}</h1>
+      <h1 className="storyrecord-title">스토리 수정하기</h1>
       <input
         type="text"
         placeholder="제목을 입력하세요"
@@ -488,45 +466,31 @@ const PlanRegist = () => {
       </div>
       {/* 기존 이미지 표시 */}
       <div className="image-preview-container">
-        {existingImages.length > 0 && (
-          <>
-       {/*     <h3>기존 이미지</h3>  */}
-            <div className="existing-images">
-              {existingImages.map((photo, index) => (
-                <div key={photo.photoId} className="image-preview-item">
-                  <img src={photo.photoUrl} alt={`기존 이미지 ${index + 1}`} className="image-preview" />
-                  <button
-                    className="remove-image-button"
-                    onClick={() => removeExistingImage(photo.photoId)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {existingImages.map((image, index) => (
+          <div key={image.imageId} className="image-preview-item">
+            <img src={image.url} alt={`기존 이미지 ${index + 1}`} className="image-preview" />
+            <button
+              className="remove-image-button"
+              onClick={() => removeExistingImage(image.imageId)}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
         {/* 새로 추가된 이미지 미리보기 */}
-        {imagePreviews.length > 0 && (
-          <>
-            <h3>새로 추가된 이미지</h3>
-            <div className="new-images">
-              {imagePreviews.map((preview, index) => (
-                <div key={index} className="image-preview-item">
-                  <img src={preview} alt={`새 이미지 ${index + 1}`} className="image-preview" />
-                  <button className="remove-image-button" onClick={() => removeNewImage(index)}>
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {imagePreviews.map((preview, index) => (
+          <div key={index} className="image-preview-item">
+            <img src={preview} alt={`새 이미지 ${index + 1}`} className="image-preview" />
+            <button className="remove-image-button" onClick={() => removeNewImage(index)}>
+              ✕
+            </button>
+          </div>
+        ))}
       </div>
       <textarea
         placeholder="메모를 입력하세요... "
         value={memo}
-        onChange={handleMemoChange}
+        onChange={(e) => setMemo(e.target.value)}
         className="memo-textarea"
       />
       <div className="preference-container">
@@ -602,4 +566,4 @@ const PlanRegist = () => {
   );
 };
 
-export default PlanRegist;
+export default StoryEdit;
