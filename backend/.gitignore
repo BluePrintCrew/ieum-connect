@@ -40,5 +40,5 @@ out/
 
 /node_modules
 .env
-resources/application.properties
-resources/data.sql
+/resources/application.properties
+/resources/data.sql
