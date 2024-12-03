@@ -138,7 +138,7 @@ const StoryRecord = () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
     await recommendKeywords(
-      `사용자가 이미지에서 '${label}' 객체를 감지하였습니다. 해당 객체와 관련된 한국어 해시태그 키워드 3개를 추천해 주세요.`
+      `사용자가 이미지에서 '${label}' 객체를 감지하였습니다. 해당 객체와 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어 ${label}스타그램, ${label}사진, ${label}추천 그리고 숫자나 기호는 답으로 주지말고 단어로만 답변해주세요.`
     );
     isUpdatingKeywords.current = false;
   };
@@ -147,7 +147,7 @@ const StoryRecord = () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
     await recommendKeywords(
-      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어, 자연, 여행, 인스타그램, 휴식스타그램, 달콤한휴식과 같은 키워드를 추천해 주세요."
+      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어, 자연, 여행, 인스타그램, 휴식스타그램, 달콤한휴식과 같은 키워드를 추천해 주세요. 그리고 숫자나 기호는 답으로 주지말고 단어로만 답변해주세요."
     );
     isUpdatingKeywords.current = false;
   };
@@ -157,7 +157,7 @@ const StoryRecord = () => {
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-          model: 'gpt-4',
+          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'user',

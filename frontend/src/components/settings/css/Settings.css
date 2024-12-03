@@ -1,0 +1,58 @@
+/* Settings.css */
+
+/* 설정 페이지 전체 컨테이너 */
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #ffe4e1;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* 상단 바 스타일 */
+  .header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .back-button {
+    font-size: 24px;
+    margin-right: 20px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: transform 0.2s;
+  }
+  
+  .back-button:hover {
+    transform: translateX(-5px);
+  }
+  
+  .header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  /* 설정 목록 스타일 */
+  .settings-list {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 하단 네비게이션과의 간격 */
+  .settings-container .footer-nav {
+    margin-top: auto;
+  }
+  

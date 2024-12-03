@@ -234,7 +234,7 @@ const PlanRegist = () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
     await recommendKeywords(
-      `사용자가 이미지에서 '${label}' 객체를 감지하였습니다. 해당 객체와 관련된 한국어 해시태그 키워드 3개를 추천해 주세요.`
+      `사용자가 이미지에서 '${label}' 객체를 감지하였습니다. 해당 객체와 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어 ${label}, ${label}사진, ${label}스타그램 그리고 숫자나 기호는 답으로 주지말고 단어로만 답변해주세요.`
     );
     isUpdatingKeywords.current = false;
   };
@@ -243,7 +243,7 @@ const PlanRegist = () => {
     if (isUpdatingKeywords.current) return;
     isUpdatingKeywords.current = true;
     await recommendKeywords(
-      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어 산, 바다, 하늘, 풍경스타그램, 여행"
+      "이미지에서 탐지된 객체가 없으므로, 이 이미지는 풍경 사진일 가능성이 높습니다. 풍경 사진과 관련된 한국어 해시태그 키워드 3개를 추천해 주세요. 예를 들어 산, 바다, 하늘, 풍경스타그램, 여행 그리고 숫자나 기호는 답으로 주지말고 단어로만 답변해주세요."
     );
     isUpdatingKeywords.current = false;
   };
@@ -509,7 +509,7 @@ const PlanRegist = () => {
         {/* 새로 추가된 이미지 미리보기 */}
         {imagePreviews.length > 0 && (
           <>
-            <h3>새로 추가된 이미지</h3>
+            {/*<h3>새로 추가된 이미지</h3>a*/}
             <div className="new-images">
               {imagePreviews.map((preview, index) => (
                 <div key={index} className="image-preview-item">

@@ -34,7 +34,7 @@ const [nickname, setNickname] = useState('');
     if (userData) {
       const user = JSON.parse(userData);
       console.log('로컬 스토리지에서 불러온 유저 정보:', user);
-      setNickname(user.username || '닉네임');
+      setNickname(user.nickname || '닉네임');
     } else {
       console.log('로컬 스토리지에 사용자 정보가 없습니다.');
     }

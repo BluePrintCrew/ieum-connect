@@ -51,7 +51,7 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
 
   // 마커 및 경로 업데이트
   useEffect(() => {
-    if (mapInstance.current) {
+    if (mapInstance.current && isMapLoaded) {
       // 기존 마커와 경로 삭제
       markerObjects.current.forEach((marker) => marker.setMap(null));
       polylineObjects.current.forEach((polyline) => polyline.setMap(null));
@@ -90,7 +90,7 @@ const KakaoMap = ({ isSpotAdding, markers, setMarkers }) => {
         mapInstance.current.setLevel(5);
       }
     }
-  }, [markers]);
+  }, [markers, isMapLoaded]);
 
   // Spot 추가 모드 변경 시 이벤트 리스너 추가/제거
   useEffect(() => {
