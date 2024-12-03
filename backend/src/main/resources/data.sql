@@ -41,20 +41,22 @@ INSERT INTO route_points (point_id, latitude, longitude, order_num, route_id)
 VALUES (4, 37.572158, 126.989940, 2, 2);
 INSERT INTO route_points (point_id, latitude, longitude, order_num, route_id)
 VALUES (5, 37.567991, 126.981937, 1, 3);
-INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id)
-VALUES (1, '/Users/son-yeonghyeon/Desktop/image/image1.jpeg', '2024-10-29 10:00:00', 37.564991, 126.983937, 1);
 
-INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id) 
-VALUES (2, '/Users/son-yeonghyeon/Desktop/image/image2.jpeg', '2024-10-29 10:30:00', 37.566158, 126.988940, 1);
-
+-- Photos
 INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id)
-VALUES (3, '/Users/son-yeonghyeon/Desktop/image/image3.jpeg', '2024-10-28 12:30:00', 37.570991, 126.982937, 2);
+VALUES (1, '/home/ubuntu/ieum-connect-photo/image1.jpeg', '2024-10-29 10:00:00', 37.564991, 126.983937, 1);
 
 INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id)
-VALUES (4, '/Users/son-yeonghyeon/Desktop/image/image4.jpeg', '2024-10-28 13:00:00', 37.572158, 126.989940, 2);
+VALUES (2, '/home/ubuntu/ieum-connect-photo/image2.jpeg', '2024-10-29 10:30:00', 37.566158, 126.988940, 1);
 
 INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id)
-VALUES (5, '/Users/son-yeonghyeon/Desktop/image/image5.jpeg', '2024-10-27 15:00:00', 37.567991, 126.981937, 3);
+VALUES (3, '/home/ubuntu/ieum-connect-photo/image3.jpeg', '2024-10-28 12:30:00', 37.570991, 126.982937, 2);
+
+INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id)
+VALUES (4, '/home/ubuntu/ieum-connect-photo/image4.jpeg', '2024-10-28 13:00:00', 37.572158, 126.989940, 2);
+
+INSERT INTO photos (photo_id, file_path, taken_at, latitude, longitude, story_id)
+VALUES (5, '/home/ubuntu/ieum-connect-photo/image5.jpeg', '2024-10-27 15:00:00', 37.567991, 126.981937, 3);
 
 -- Hashtags
 INSERT INTO hashtags (hashtag_id, name) VALUES (1, '여행');
