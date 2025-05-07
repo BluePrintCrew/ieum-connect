@@ -1,3 +1,6 @@
+![Image](https://github.com/user-attachments/assets/78ef526a-f625-4db4-b2c3-be82b26cd419)
+
+
 ## 1. 프로젝트 개요
 **프로젝트 명:** 이음 (추억을 만드는 서비스)
 
